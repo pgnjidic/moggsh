@@ -27,6 +27,15 @@ dependencies:
   # Terminal emulator (WebView-based xterm.js)
   webview_flutter: ^4.10.0
 
+  # PTY (pseudo-terminal) for local shell
+  flutter_pty: ^0.3.1
+
+  # HTTP for downloading rootfs/proot on first run
+  http: ^1.2.2
+
+  # Archive extraction
+  archive: ^3.6.1
+
   # Utilities
   path_provider: ^2.1.5
   uuid: ^4.5.1

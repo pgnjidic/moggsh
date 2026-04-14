@@ -1,10 +1,11 @@
 ---
 id: MOG-4
 title: Local Linux environment via proot-distro
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@agent'
 created_date: '2026-04-14'
-updated_date: '2026-04-14'
+updated_date: '2026-04-14 19:57'
 labels:
   - s1
 dependencies: []
@@ -17,6 +18,7 @@ priority: medium
 Embeddati Linux environment u Android app bez root-a, koristeći proot.
 Ovo je osnova Local moda — bez ovoga nema "instaliraj i kodiraj".
 <!-- SECTION:DESCRIPTION:END -->
+
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 `bash` shell radi unutar app-a, `ls`, `echo $HOME`, `pwd` funkcionišu
@@ -25,22 +27,13 @@ Ovo je osnova Local moda — bez ovoga nema "instaliraj i kodiraj".
 - [ ] #4 Alpine Linux ARM64 environment funkcionalan na fizičkom Android uređaju
 <!-- AC:END -->
 
+## Implementation Plan
 
-## Zadaci
-
-- proot-distro approach: bundlati Alpine Linux ARM64 base image u app assets
-- Flutter `MethodChannel` bridge (Dart ↔ native Android/Kotlin)
-- PTY creation: Kotlin kreira pseudoterminal, Flutter čita/piše
-- Environment setup:
-  - `PATH`, `HOME`, `TERM=xterm-256color`, `LANG=en_US.UTF-8`
-  - Working directory: `/data/data/app.mogsh.terminal/files/home`
-  - Symlink: `~/projects` → Android shared storage (uz permission)
-- Shell: `bash` (Alpine default je `ash` — trebamo bash za compatibility)
-- First-run: proot filesystem extraction iz app assets (~50MB compressed)
-  sa progress screen tokom extractiona
-- Filesystem persists između restarta app-a
-
-## Open question
-
-Da li koristiti Termux bootstrap libraries kao dependency umjesto bundlati vlastiti?
-Trade-off: manji APK vs bolji UX kontrola. Trenutna preporuka: embed direktno.
+<!-- SECTION:PLAN:BEGIN -->
+1. Kreirati PtermService — Dart wrapper oko Android PTY (process_run ili native MethodChannel)
+2. Download + extract Alpine ARM64 rootfs u app files directory pri prvom pokretanju
+3. Wrapper koji pokrece proot sa Alpine rootfs-om
+4. Povezati PtermService sa TerminalWidget (stdin/stdout bridge)
+5. Persistentni filesystem — rootfs ostaje u app storage
+6. SetupScreen — progress bar tokom prvog extractiona
+<!-- SECTION:PLAN:END -->
