@@ -37,6 +37,9 @@ dependencies:
   # Archive extraction
   archive: ^3.6.1
 
+  # Biometric auth for SSH key export
+  local_auth: ^2.3.0
+
   # Deep links (OAuth callback)
   app_links: ^6.3.2
 
