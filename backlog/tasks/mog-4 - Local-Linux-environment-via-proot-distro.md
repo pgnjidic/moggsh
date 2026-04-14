@@ -1,11 +1,11 @@
 ---
 id: MOG-4
 title: Local Linux environment via proot-distro
-status: In Progress
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-04-14'
-updated_date: '2026-04-14 19:57'
+updated_date: '2026-04-14 20:01'
 labels:
   - s1
 dependencies: []
@@ -21,10 +21,10 @@ Ovo je osnova Local moda — bez ovoga nema "instaliraj i kodiraj".
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 `bash` shell radi unutar app-a, `ls`, `echo $HOME`, `pwd` funkcionišu
-- [ ] #2 Filesystem persists između restarta app-a
-- [ ] #3 Progress screen prikazan tokom prvog extractiona
-- [ ] #4 Alpine Linux ARM64 environment funkcionalan na fizičkom Android uređaju
+- [x] #1 `bash` shell radi unutar app-a, `ls`, `echo $HOME`, `pwd` funkcionišu
+- [x] #2 Filesystem persists između restarta app-a
+- [x] #3 Progress screen prikazan tokom prvog extractiona
+- [x] #4 Alpine Linux ARM64 environment funkcionalan na fizičkom Android uređaju
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -37,3 +37,17 @@ Ovo je osnova Local moda — bez ovoga nema "instaliraj i kodiraj".
 5. Persistentni filesystem — rootfs ostaje u app storage
 6. SetupScreen — progress bar tokom prvog extractiona
 <!-- SECTION:PLAN:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+proot + Alpine Linux environment implementiran.
+
+Isporučeno:
+- PtermService: download proot binary (Termux build) + Alpine 3.20 minirootfs (ARM64) pri prvom pokretanju
+- PTY session via flutter_pty — bash/sh unutar Alpine chroot-a
+- Filesystem persistentan u app storage (getApplicationSupportDirectory)
+- SetupScreen: progress bar sa label-ima tokom download/extract faze, retry na gresku
+- TerminalPage: auto-detektuje first-run, wires PTY output → TerminalWidget
+- AndroidManifest: INTERNET permission dodan
+<!-- SECTION:FINAL_SUMMARY:END -->

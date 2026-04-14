@@ -2,9 +2,13 @@ import 'dart:async';
 import 'dart:io';
 import 'package:archive/archive_io.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_pty/flutter_pty.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+
+// ignore: constant_identifier_names
+const _platform = MethodChannel('app.mogsh.terminal/service');
 
 /// proot + Alpine Linux environment manager.
 /// Downloads and extracts Alpine rootfs + proot binary on first run,
@@ -23,6 +27,10 @@ class PtermService {
 
   bool _running = false;
   bool get isRunning => _running;
+
+  // Fires when PTY dies unexpectedly
+  final _crashController = StreamController<void>.broadcast();
+  Stream<void> get onCrash => _crashController.stream;
 
   /// Check if first-run setup is needed
   Future<bool> needsSetup() async {
@@ -103,14 +111,31 @@ class PtermService {
 
     _running = true;
 
+    // Start foreground service to keep session alive
+    if (Platform.isAndroid) {
+      _platform.invokeMethod('startForeground').catchError((_) {});
+    }
+
     _pty!.output
         .cast<List<int>>()
         .transform(const Utf8Decoder(allowMalformed: true) as StreamTransformer<List<int>, String>)
         .listen(
           (data) => _outputController.add(data),
-          onDone: () => _running = false,
+          onDone: () {
+            _running = false;
+            if (Platform.isAndroid) {
+              _platform.invokeMethod('stopForeground').catchError((_) {});
+            }
+            _crashController.add(null);
+          },
         );
   }
+
+  /// Send Ctrl+C (ETX) to interrupt active process
+  void sendCtrlC() => write('\x03');
+
+  /// Restart the shell after crash
+  Future<void> restart() => start();
 
   /// Send input to the PTY (keyboard data)
   void write(String data) {
@@ -131,6 +156,7 @@ class PtermService {
   void dispose() {
     stop();
     _outputController.close();
+    _crashController.close();
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
