@@ -36,6 +36,12 @@ dependencies:
   # Archive extraction
   archive: ^3.6.1
 
+  # Deep links (OAuth callback)
+  app_links: ^6.3.2
+
+  # Launch URLs (OAuth browser)
+  url_launcher: ^6.3.1
+
   # Utilities
   path_provider: ^2.1.5
   uuid: ^4.5.1
