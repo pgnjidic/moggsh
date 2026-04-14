@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #0A0A0F;
+      overflow: hidden;
+    }
+    #terminal {
+      width: 100%;
+      height: 100%;
+    }
+    /* xterm overrides */
+    .xterm { height: 100% !important; }
+    .xterm-viewport { overflow-y: auto !important; }
+  </style>
+  <link rel="stylesheet" href="xterm.css">
+</head>
+<body>
+  <div id="terminal"></div>
+
+  <script src="xterm.js"></script>
+  <script src="xterm-addon-fit.js"></script>
+  <script src="xterm-addon-web-links.js"></script>
+  <script src="xterm-addon-search.js"></script>
+
+  <script>
+    const term = new Terminal({
+      fontFamily: 'JetBrainsMono, "JetBrains Mono", "Courier New", monospace',
+      fontSize: 14,
+      lineHeight: 1.2,
+      theme: {
+        background:   '#0A0A0F',
+        foreground:   '#E0E0E0',
+        cursor:       '#00FF88',
+        cursorAccent: '#0A0A0F',
+        black:        '#1A1A24',
+        red:          '#FF5555',
+        green:        '#00FF88',
+        yellow:       '#FFD700',
+        blue:         '#00D4FF',
+        magenta:      '#FF00FF',
+        cyan:         '#00FFFF',
+        white:        '#E0E0E0',
+        brightBlack:  '#444466',
+        brightRed:    '#FF7777',
+        brightGreen:  '#33FF99',
+        brightYellow: '#FFE44D',
+        brightBlue:   '#33DDFF',
+        brightMagenta:'#FF44FF',
+        brightCyan:   '#44FFFF',
+        brightWhite:  '#FFFFFF',
+      },
+      cursorBlink: true,
+      allowTransparency: false,
+      scrollback: 5000,
+      convertEol: true,
+      termName: 'xterm-256color',
+    });
+
+    const fitAddon = new FitAddon.FitAddon();
+    const webLinksAddon = new WebLinksAddon.WebLinksAddon();
+    const searchAddon = new SearchAddon.SearchAddon();
+
+    term.loadAddon(fitAddon);
+    term.loadAddon(webLinksAddon);
+    term.loadAddon(searchAddon);
+
+    term.open(document.getElementById('terminal'));
+    fitAddon.fit();
+
+    // Pinch-to-zoom
+    let initialDistance = null;
+    let baseFontSize = term.options.fontSize;
+
+    document.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        initialDistance = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        baseFontSize = term.options.fontSize;
+      }
+    });
+
+    document.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && initialDistance !== null) {
+        e.preventDefault();
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        const scale = dist / initialDistance;
+        const newSize = Math.min(18, Math.max(11, Math.round(baseFontSize * scale)));
+        if (newSize !== term.options.fontSize) {
+          term.options.fontSize = newSize;
+          fitAddon.fit();
+        }
+      }
+    }, { passive: false });
+
+    document.addEventListener('touchend', () => { initialDistance = null; });
+
+    // Resize observer
+    new ResizeObserver(() => fitAddon.fit()).observe(document.getElementById('terminal'));
+
+    // Flutter → JS: write data to terminal
+    window.termWrite = (data) => term.write(data);
+
+    // Flutter → JS: clear terminal
+    window.termClear = () => term.clear();
+
+    // Flutter → JS: set font size
+    window.termSetFontSize = (size) => {
+      term.options.fontSize = Math.min(18, Math.max(11, size));
+      fitAddon.fit();
+    };
+
+    // Flutter → JS: search
+    window.termSearch = (query) => searchAddon.findNext(query);
+
+    // JS → Flutter: send user input
+    term.onData((data) => {
+      if (window.flutter_inappwebview) {
+        window.flutter_inappwebview.callHandler('onInput', data);
+      } else if (window.FlutterChannel) {
+        window.FlutterChannel.postMessage(JSON.stringify({ type: 'input', data: data }));
+      }
+    });
+
+    // JS → Flutter: terminal resized
+    term.onResize(({ cols, rows }) => {
+      if (window.FlutterChannel) {
+        window.FlutterChannel.postMessage(JSON.stringify({ type: 'resize', cols: cols, rows: rows }));
+      }
+    });
+
+    // Ready signal
+    window.addEventListener('load', () => {
+      fitAddon.fit();
+      if (window.FlutterChannel) {
+        window.FlutterChannel.postMessage(JSON.stringify({ type: 'ready' }));
+      }
+    });
+  </script>
+</body>
+</html>

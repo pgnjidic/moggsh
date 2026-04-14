@@ -1,10 +1,11 @@
 ---
 id: MOG-3
 title: Terminal emulator widget (xterm integracija)
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@agent'
 created_date: '2026-04-14'
-updated_date: '2026-04-14'
+updated_date: '2026-04-14 19:53'
 labels:
   - s1
 dependencies: []
@@ -17,6 +18,7 @@ priority: medium
 Flutter terminal widget koji renderuje ANSI output i prima keyboard input.
 Ovo je srce app-a — mora biti fluidan i tačan.
 <!-- SECTION:DESCRIPTION:END -->
+
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 Terminal prikazuje ANSI-colored Claude Code output bez lag-a
@@ -26,18 +28,13 @@ Ovo je srce app-a — mora biti fluidan i tačan.
 - [ ] #5 xterm-256color kompatibilnost potvrđena
 <!-- AC:END -->
 
+## Implementation Plan
 
-## Zadaci
-
-- Evaluirati i odabrati: `xterm` (flutter_pty) vs custom native channel
-- Terminal widget koji podržava:
-  - ANSI escape codes (boje, bold, italic, cursor movement)
-  - `xterm-256color` (kritično za Claude Code / Aider output)
-  - Scrollback buffer (min 10.000 linija)
-  - UTF-8 + emoji
-  - Resize/reflow na promjenu veličine ekrana
-- JetBrains Mono font bundlan u `assets/fonts/`
-- Pinch-to-zoom font size (raspon 11–18px)
-- Selection mode za copy/paste terminal teksta
-- Performans test: 500 linija AI outputa → scroll mora biti 60fps na
-  mid-range Android (Snapdragon 665, 4GB RAM)
+<!-- SECTION:PLAN:BEGIN -->
+1. Kreirati TerminalWidget kao Flutter WebView koji učitava xterm.js
+2. HTML/JS bundle sa xterm.js + addons (FitAddon, WebLinksAddon, SearchAddon)
+3. Dart↔JS bridge: pisanje u terminal, čitanje inputa
+4. Pinch-to-zoom implementacija u JS sloju
+5. JetBrains Mono font via assets
+6. Integrisati TerminalWidget u main.dart kao proof of concept
+<!-- SECTION:PLAN:END -->

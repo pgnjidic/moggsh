@@ -41,3 +41,11 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/terminal/index.html
+    - assets/terminal/xterm.js
+    - assets/terminal/xterm.css
+    - assets/terminal/xterm-addon-fit.js
+    - assets/terminal/xterm-addon-web-links.js
+    - assets/terminal/xterm-addon-search.js
