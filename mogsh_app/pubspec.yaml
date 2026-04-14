@@ -14,6 +14,7 @@ dependencies:
   # State management
   flutter_riverpod: ^2.6.1
   riverpod_annotation: ^2.6.1
+  provider: ^6.1.2
 
   # Local storage
   hive_flutter: ^1.1.0
