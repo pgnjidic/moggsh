@@ -1,0 +1,14 @@
+project_name: "mogsh"
+default_status: "To Do"
+statuses: ["To Do", "In Progress", "Done"]
+labels: ["s1", "s2", "s3", "s4", "s5", "v1.1", "v1.2", "infra"]
+date_format: yyyy-mm-dd
+max_column_width: 20
+auto_open_browser: true
+default_port: 6420
+remote_operations: false
+auto_commit: false
+bypass_git_hooks: false
+check_active_branches: true
+active_branch_days: 30
+task_prefix: "MOG"
