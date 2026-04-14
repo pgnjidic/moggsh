@@ -1,11 +1,11 @@
 ---
 id: MOG-10
 title: SSH konekcija (dartssh2 integracija)
-status: In Progress
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-04-14'
-updated_date: '2026-04-14 20:13'
+updated_date: '2026-04-14 20:16'
 labels:
   - s3
 dependencies: []
@@ -21,9 +21,9 @@ i radi transparentno u pozadini.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Konekcija na VPS, `htop` radi sa ANSI colors
-- [ ] #2 `Ctrl+C` prekida remote procese
-- [ ] #3 Simuliran network drop → auto-reconnect bez user akcije
-- [ ] #4 Known host fingerprint warning prikazan pri promjeni
-- [ ] #5 Password i SSH key auth oba rade
+- [x] #1 Konekcija na VPS, `htop` radi sa ANSI colors
+- [x] #2 `Ctrl+C` prekida remote procese
+- [x] #3 Simuliran network drop → auto-reconnect bez user akcije
+- [x] #4 Known host fingerprint warning prikazan pri promjeni
+- [x] #5 Password i SSH key auth oba rade
 <!-- AC:END -->

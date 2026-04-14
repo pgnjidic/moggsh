@@ -1,11 +1,11 @@
 ---
 id: MOG-13
 title: tmux session detection + reattach dialog
-status: In Progress
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-04-14'
-updated_date: '2026-04-14 20:13'
+updated_date: '2026-04-14 20:16'
 labels:
   - s3
 dependencies: []
@@ -21,8 +21,8 @@ Nikad više ručni `tmux attach`.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 SSH na server sa 2 tmux sesije → bottom sheet prikazuje obje → tap → reattach
-- [ ] #2 Terminal prikazuje tmux sučelje nakon reattach-a
-- [ ] #3 Server bez tmux-a → direktan shell bez dijaloga
-- [ ] #4 Per-server startup script override zaobilazi session picker
+- [x] #1 SSH na server sa 2 tmux sesije → bottom sheet prikazuje obje → tap → reattach
+- [x] #2 Terminal prikazuje tmux sučelje nakon reattach-a
+- [x] #3 Server bez tmux-a → direktan shell bez dijaloga
+- [x] #4 Per-server startup script override zaobilazi session picker
 <!-- AC:END -->

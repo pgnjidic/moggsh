@@ -18,6 +18,7 @@ class SshSession {
 
   SshConnectionState get state => _state;
   String? get lastError => _lastError;
+  SSHClient? get client => _client;
 
   final _outputController = StreamController<String>.broadcast();
   final _stateController  = StreamController<SshConnectionState>.broadcast();
