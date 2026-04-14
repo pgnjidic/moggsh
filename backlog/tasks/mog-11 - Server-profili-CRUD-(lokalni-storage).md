@@ -11,9 +11,20 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Upravljanje saved server konfiguracijama — Home screen je ovo.
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Dodaj server → pojavi se u listi → tap → konekcija uspostavljena
+- [ ] #2 Edit mijenja podatke, Delete uklanja profil
+- [ ] #3 Export/import round-trip radi (JSON backup)
+- [ ] #4 Startup script se izvršava automatski na connect
+- [ ] #5 Quick-connect < 3s od tapa do otvorene sesije
+<!-- AC:END -->
+
 
 ## Data model
 
@@ -54,8 +65,3 @@ class ServerProfile {
 
 - Export profila kao encrypted JSON (backup / novi telefon)
 - Import sa JSON fajla
-
-## Acceptance criteria
-
-Dodaj server → pojavi se u listi → tap → konekcija.
-Edit mijenja podatke. Delete uklanja. Export/import round-trip radi.

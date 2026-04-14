@@ -11,10 +11,21 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Cijeli mogsh design system kao Flutter theme + custom widget library.
 Cyberpunk terminal aesthetic: duboki crni prostor, neon cyan/teal akcenti, glow efekti.
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Widget catalog (debug screen) prikazuje sve komponente u svim stanjima
+- [ ] #2 Vizualni izgled identičan design spec-u (boje, spacing, glow)
+- [ ] #3 Nema stock Material widgeta vidljivih u produkcijskom UI-u
+- [ ] #4 GlowPulse animacija na status dotovima radi (2s loop)
+- [ ] #5 JetBrains Mono font korišten i u UI elementima i u terminalu
+<!-- AC:END -->
+
 
 ## ThemeData i Color System
 
@@ -71,8 +82,3 @@ class MogshRadius  { static const xs = 2.0; sm = 4.0; md = 6.0; lg = 10.0; xl = 
 ## Deliverable
 
 Widget catalog ekran (debug only) koji prikazuje sve komponente u svim stanjima.
-
-## Acceptance criteria
-
-Vizualno identično design spec-u. Widget catalog prikazuje sve komponente.
-Nema stock Material widgeta vidljivih u produkcijskom UI-u.

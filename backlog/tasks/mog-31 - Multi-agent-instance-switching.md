@@ -11,11 +11,22 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Brzo skakanje između više Claude/agent instanci koje paralelno rade.
 Svaka instanca je tab, ali trebamo poseban UX sloj koji razumije da su to
 agenti, ne samo terminali — i koji može automatski prebacivati fokus.
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 3 aktivna Claude Code taba: auto-switch skače na tab koji čeka `(y/n)`
+- [ ] #2 Nakon odgovora (Return mode): app se vrati na prethodni tab
+- [ ] #3 Pinned tab: nikad ne gubi fokus zbog auto-switch
+- [ ] #4 Agent status overlay (24px) prikazuje tačne statuse sva 3 agenta u realnom vremenu
+- [ ] #5 Settings: auto-switch toggle i after-response behavior konfigurabilan
+<!-- AC:END -->
+
 
 ## Problem
 
@@ -73,10 +84,3 @@ Switch animation:             [Crossfade | Instant | Slide]
 Kad je app u backgroundu:
 - Notifikacija koja tab čeka
 - Notifikacija ima "Quick Reply" action — inline y/n bez otvaranja app-a
-
-## Acceptance criteria
-
-3 aktivna Claude Code taba. Auto-switch uključen. Agent na tabu 2 čeka `(y/n)` →
-app automatski skoči na tab 2 → tap Y → vrati se na tab 1 (Return mode).
-Pinned tab: tab 1 je pinned → auto-switch NE prebacuje sa njega.
-Status overlay prikazuje ispravne statuse sva 3 agenta u realnom vremenu.

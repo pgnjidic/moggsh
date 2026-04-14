@@ -11,10 +11,20 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Automatski detektuj tmux sesije odmah nakon SSH konekcije i ponudi reattach.
 Nikad više ručni `tmux attach`.
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 SSH na server sa 2 tmux sesije → bottom sheet prikazuje obje → tap → reattach
+- [ ] #2 Terminal prikazuje tmux sučelje nakon reattach-a
+- [ ] #3 Server bez tmux-a → direktan shell bez dijaloga
+- [ ] #4 Per-server startup script override zaobilazi session picker
+<!-- AC:END -->
+
 
 ## Detection flow
 
@@ -45,8 +55,3 @@ tmux list-sessions -F "#{session_name}|#{session_windows}|#{session_attached}" 2
 
 Ako server profil ima `startupScript` → izvršava se umjesto session picker-a.
 Npr: `cd ~/myproject && tmux attach -t dev || tmux new -s dev`
-
-## Acceptance criteria
-
-SSH na server sa 2 tmux sesije → bottom sheet sa obje → tap → reattach.
-Terminal prikazuje tmux. Server bez tmux-a → direktan shell bez dijaloga.

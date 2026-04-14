@@ -11,10 +11,21 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Prilagodljivi redovi tipki iznad system tastature + swipe geste na terminal area.
 Nadomjestak za sve što mobilni keyboard ne može.
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Ctrl+C radi via Ctrl modifier + C button
+- [ ] #2 Swipe gore na terminal area povlači prethodnu komandu iz historije
+- [ ] #3 Custom snippet šalje se jednim tapom
+- [ ] #4 Snippet manager: add/delete/reorder radi
+- [ ] #5 Haptic feedback na svaki tap buttona
+<!-- AC:END -->
+
 
 ## Layout (3 reda po design sistemu)
 
@@ -52,8 +63,3 @@ Row 3 (nav+voice): [←] [↑] [↓] [→] [🎤 VOICE] [/] [~] [|]
 | Swipe dolje | ↓ (history next) |
 
 Sensitivity podesiva u Settings (Low / Medium / High).
-
-## Acceptance criteria
-
-Ctrl+C radi via button. Swipe gore povlači prethodnu komandu.
-Custom snippet šalje se jednim tapom. Snippet manager: add/delete/reorder.

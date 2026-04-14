@@ -11,10 +11,20 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Pri prvom pokretanju Local moda, automatski instalirati dev toolchain.
 Korisnik ne smije ručno ništa instalirati — to je naš core promise.
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 `node --version`, `python3 --version`, `git --version` svi rade u terminalu
+- [ ] #2 Offline: prikazuje error sa retry buttonom ako nema interneta
+- [ ] #3 Drugi pokretanje ne pokreće provisioning ponovo (state sačuvan)
+- [ ] #4 Post-setup screen prikazuje instalirane verzije
+<!-- AC:END -->
+
 
 ## Zadaci
 
@@ -33,9 +43,3 @@ Korisnik ne smije ručno ništa instalirati — to je naš core promise.
 ## Blokiran na
 
 - 0005 (terminal mora raditi)
-
-## Acceptance criteria
-
-Fresh install → auto-provisioning → `node --version`, `python3 --version`,
-`git --version` svi rade u terminalu. Offline prikazuje error s retry.
-Drugi pokretanje ne pokreće provisioning ponovo.

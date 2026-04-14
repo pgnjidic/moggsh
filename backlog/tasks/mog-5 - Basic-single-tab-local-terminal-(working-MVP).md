@@ -11,10 +11,20 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Spojiti xterm widget (0003) i proot environment (0004) u jedan funkcionalni terminal.
 Kraj sprinta 1 — app radi kao terminal.
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Korisnik može pokrenuti `bash`, ukucati `ls -la`, dobiti output
+- [ ] #2 Ctrl+C via button prekida aktivni proces
+- [ ] #3 App suspend/resume čuva terminal sesiju aktivnom (foreground service)
+- [ ] #4 Crash recovery: ako PTY umre, reconnect screen se prikazuje
+<!-- AC:END -->
+
 
 ## Zadaci
 
@@ -31,8 +41,3 @@ Kraj sprinta 1 — app radi kao terminal.
 
 - 0003 (xterm widget mora biti gotov)
 - 0004 (proot environment mora biti gotov)
-
-## Acceptance criteria
-
-Možeš pokrenuti `bash`, ukucati `ls -la`, dobiti output,
-`Ctrl+C` prekida proces, app suspend/resume čuva sesiju aktivnom.

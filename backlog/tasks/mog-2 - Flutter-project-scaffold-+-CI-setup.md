@@ -11,9 +11,20 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Inicijalizirati Flutter projekt sa svim dependency-ima, folder strukturom i CI pipelineom.
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 `flutter run` radi na Android emulatore ili fizičkom uređaju
+- [ ] #2 CI pipeline prolazi (flutter test + flutter build apk) na GitHub Actions
+- [ ] #3 Feature-first folder struktura uspostavljena (features/, core/)
+- [ ] #4 Svi dependency-i (riverpod, hive, dartssh2, flutter_secure_storage) instalirani
+- [ ] #5 Dev i prod flavor konfigurisan
+<!-- AC:END -->
+
 
 ## Zadaci
 
@@ -34,8 +45,3 @@ Inicijalizirati Flutter projekt sa svim dependency-ima, folder strukturom i CI p
 - GitHub Actions CI: `flutter test` + `flutter build apk` na svaki PR
 - Flavors: `dev` i `prod` (različiti package names, različite ikone)
 - Semantic versioning: `1.0.0+1`
-
-## Acceptance criteria
-
-`flutter run` radi na Android emulator, CI prolazi, folder struktura uspostavljena,
-svi dependency-i instalirani i importabilni.

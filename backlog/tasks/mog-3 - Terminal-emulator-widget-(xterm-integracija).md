@@ -11,10 +11,21 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Flutter terminal widget koji renderuje ANSI output i prima keyboard input.
 Ovo je srce app-a — mora biti fluidan i tačan.
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Terminal prikazuje ANSI-colored Claude Code output bez lag-a
+- [ ] #2 Font je JetBrains Mono, scroll fluidan pri 500+ linija outputa
+- [ ] #3 Pinch-to-zoom radi u rasponu 11–18px
+- [ ] #4 Selection mode (copy/paste terminal teksta) radi
+- [ ] #5 xterm-256color kompatibilnost potvrđena
+<!-- AC:END -->
+
 
 ## Zadaci
 
@@ -30,8 +41,3 @@ Ovo je srce app-a — mora biti fluidan i tačan.
 - Selection mode za copy/paste terminal teksta
 - Performans test: 500 linija AI outputa → scroll mora biti 60fps na
   mid-range Android (Snapdragon 665, 4GB RAM)
-
-## Acceptance criteria
-
-Terminal prikazuje ANSI-colored Claude Code output bez lag-a, font je JetBrains Mono,
-scroll fluidan pri 500+ linija, pinch-to-zoom radi.

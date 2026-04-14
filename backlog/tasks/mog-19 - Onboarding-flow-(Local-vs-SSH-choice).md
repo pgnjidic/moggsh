@@ -11,10 +11,21 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 First-run iskustvo koje dovede korisnika do prvog "wow" momenta što brže moguće.
 Cilj: < 5 minuta od install-a do `claude` koji radi.
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Fresh install → onboarding → Local path → Claude Code autentificiran → `claude` radi u terminalu
+- [ ] #2 Cijeli Local flow < 5 minuta za prosječnog korisnika
+- [ ] #3 Skip radi na svakom koraku onboardinga
+- [ ] #4 SSH path: dodaj server → konekcija → terminal u < 2 minute
+- [ ] #5 Error recovery: ako provisioning faili → retry screen prikazan
+<!-- AC:END -->
+
 
 ## Screens
 
@@ -45,9 +56,3 @@ Cilj: < 5 minuta od install-a do `claude` koji radi.
 - Deep link za preskakanje: `mogsh://skip-onboarding` (dev/testing)
 - Progress indicator (dots ili steps) tokom cijelog flowa
 - Error recovery: ako provisioning faili → retry screen, ne black screen
-
-## Acceptance criteria
-
-Fresh install → onboarding → Local path → Claude Code instaliran i autentificiran
-→ `claude` radi u terminalu. Cijeli flow < 5 minuta za prosječnog korisnika.
-Skip radi na svakom koraku.

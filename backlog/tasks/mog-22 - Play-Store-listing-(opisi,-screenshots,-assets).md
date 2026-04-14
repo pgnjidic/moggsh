@@ -11,9 +11,19 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Sve što treba za Play Store submission i dobru konverziju.
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Internal testing build uploadan i instalabilan via Play Store
+- [ ] #2 Listing draft kompletan: title, description, 4 screenshota, icon, feature graphic
+- [ ] #3 Privacy policy URL živ na mogsh.app/privacy
+- [ ] #4 Content rating questionnaire popunjen
+<!-- AC:END -->
+
 
 ## Store listing (EN)
 
@@ -52,9 +62,3 @@ Sve što treba za Play Store submission i dobru konverziju.
 - Developer account aktivan (može trajati 1-2 dana verifikacija)
 - Payment profile za Pro subscription
 - App signing (Play App Signing — Google managed key)
-
-## Acceptance criteria
-
-Internal testing build uploadan i instalabilan via Play Store.
-Listing draft kompletan: title, description, screenshots, icon, feature graphic.
-Privacy policy URL živ.

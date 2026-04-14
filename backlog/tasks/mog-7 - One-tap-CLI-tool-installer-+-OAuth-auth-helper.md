@@ -11,11 +11,22 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Ekran za instalaciju popularnih vibe coding alata jednim tapom + OAuth flow za autentifikaciju.
 Ovo je najvažniji onboarding moment — korisnik mora doći do `claude` radnog stanja
 bez ikakve terminalne gimnastike.
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Tap 'Install Claude Code' → instalirano, zeleni badge sa verzijom
+- [ ] #2 OAuth flow otvara browser, token se vrati via deep link i sačuva
+- [ ] #3 `claude` radi u terminalu s autorizacijom
+- [ ] #4 Error state (crveni Failed + Retry) prikazuje se ako install pukne
+- [ ] #5 Cijeli flow (install + auth) < 3 minute
+<!-- AC:END -->
+
 
 ## Alati
 
@@ -46,8 +57,3 @@ bez ikakve terminalne gimnastike.
 ## Blokiran na
 
 - 0006 (Node.js i Python moraju biti instalirani)
-
-## Acceptance criteria
-
-Tap "Install Claude Code" → instalirano → tap "Authenticate" → OAuth flow →
-`claude` radi u terminalu s autorizacijom. Cijeli flow < 3 minute.

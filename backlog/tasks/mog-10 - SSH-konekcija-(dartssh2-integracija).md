@@ -11,10 +11,21 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Profesionalni SSH klijent koji ne crasha, ne gubi konekciju bez razloga,
 i radi transparentno u pozadini.
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Konekcija na VPS, `htop` radi sa ANSI colors
+- [ ] #2 `Ctrl+C` prekida remote procese
+- [ ] #3 Simuliran network drop → auto-reconnect bez user akcije
+- [ ] #4 Known host fingerprint warning prikazan pri promjeni
+- [ ] #5 Password i SSH key auth oba rade
+<!-- AC:END -->
+
 
 ## Zadaci
 
@@ -30,9 +41,3 @@ i radi transparentno u pozadini.
   upozori na mismatch (TOFU model)
 - Connection banner (MOTD) prikaži u terminalu
 - Terminal resize: SSH channel resize request na keyboard show/hide
-
-## Acceptance criteria
-
-Konekcija na VPS, `htop` radi sa ANSI colors, `Ctrl+C` prekida procese,
-simuliran network drop → auto-reconnect se desi bez user akcije.
-Known host fingerprint warning prikazan na promjenu.

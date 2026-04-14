@@ -11,9 +11,19 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Vizualni identitet mogsh branda. Cyberpunk aesthetic konzistentan sa app-om.
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 App icon uploadan u Play Console (512x512px)
+- [ ] #2 Feature graphic i 4 screenshota uploadan
+- [ ] #3 mogsh.app landing page živ sa Play Store badge-om i email signup-om
+- [ ] #4 Privacy policy URL aktivan (potrebno za Play Store submission)
+<!-- AC:END -->
+
 
 ## App Icon
 
@@ -59,8 +69,3 @@ Hook:         "Other terminals just got mogged."
 Play Store:   "AI Coding Terminal — Local & SSH"
 Product Hunt: "mogsh — Vibe coding terminal for Android"
 ```
-
-## Acceptance criteria
-
-App icon uploadan u Play Console. Feature graphic i 4 screenshota uploadan.
-mogsh.app živ sa landing page-om. Privacy policy URL aktivan (potrebno za Play Store).

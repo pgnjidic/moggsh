@@ -11,10 +11,20 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Mosh (Mobile Shell) je UDP-based protokol koji preživljava IP promjene, kratke
 pauze interneta i sleep/wake cikluse. Idealan za mobilni razvoj.
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Konekcija via Mosh uspostavljena kad je mosh-server dostupan
+- [ ] #2 Airplane mode 10s → automatski reconnect bez gubitka sesije
+- [ ] #3 'Connected via Mosh' badge vidljiv u tab bar-u
+- [ ] #4 Fallback na SSH ako mosh nije dostupan na serveru
+<!-- AC:END -->
+
 
 ## Implementacija opcije
 
@@ -39,8 +49,3 @@ Trenutna preporuka: Option A.
 - "Connected via Mosh" badge u tab-u
 - Seamless reconnect na network promjenu (WiFi ↔ LTE)
 - Fallback: ako mosh ne radi → "Switch to SSH" opcija
-
-## Acceptance criteria
-
-Konekcija via Mosh, simuliraj airplane mode 10 sekundi → reconnect automatski
-bez gubitka sesije. "Connected via Mosh" badge vidljiv u tabu.

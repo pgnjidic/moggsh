@@ -11,10 +11,20 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Android Speech-to-Text integracija za hands-free terminal input.
 Koristan za duže promptove — izgovoриш umjesto tipkaš.
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Hold voice button, izgovori 'git status' → komanda se pojavi u input field
+- [ ] #2 Release → šalje se u terminal
+- [ ] #3 Radi offline sa downloaded Google STT modelom
+- [ ] #4 'slash plan' izgovoreno → `/plan` u inputu
+<!-- AC:END -->
+
 
 ## Voice button (po design sistemu)
 
@@ -41,9 +51,3 @@ Koristan za duže promptove — izgovoриш umjesto tipkaš.
 
 - Free: 50 voice commands/dan
 - Pro: unlimited
-
-## Acceptance criteria
-
-Hold voice button, reci "git status", komanda se pojavi u input field.
-Release → šalje se u terminal. Radi offline sa downloaded modelom.
-"slash plan" → `/plan` u inputu.

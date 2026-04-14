@@ -11,10 +11,21 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Razriješiti sve otvorene odluke prije nego što dev počne. Svaka nerješena odluka
 blokira ili usporava sprint 1.
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Sve arhitekturalne odluke dokumentovane (ADR fajl u backlog/decisions/)
+- [ ] #2 Flutter projekt inicijaliziran na GitHubu
+- [ ] #3 mogsh.app domen registrovan
+- [ ] #4 Play Store developer account aktivan
+- [ ] #5 Task prefix MOG potvrđen, package name app.mogsh.terminal potvrđen
+<!-- AC:END -->
+
 
 ## Odluke za donijeti
 
@@ -67,7 +78,3 @@ blokira ili usporava sprint 1.
 - [ ] Flutter projekt inicijaliziran na GitHubu
 - [ ] mogsh.app registrovan
 - [ ] Play Store developer account aktivan
-
-## Acceptance criteria
-
-Sve odluke dokumentovane, tim aligned, projekt na Githu, domain radi.

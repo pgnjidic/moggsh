@@ -11,9 +11,19 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Kompletne korisničke postavke, organizovane u sekcije.
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Sve opcije se sačuvaju i perzistiraju kroz restart app-a
+- [ ] #2 Font size live preview radi u settings ekranu
+- [ ] #3 Clear credentials zahtijeva potvrdu prije brisanja
+- [ ] #4 Re-provision button reinstalira dev tools uspješno
+<!-- AC:END -->
+
 
 ## Sekcije
 
@@ -62,8 +72,3 @@ Kompletne korisničke postavke, organizovane u sekcije.
 - Sve opcije u Hive (persistent)
 - Live preview za font size (mini terminal preview u settings)
 - Settings changes immediate (ne treba restart)
-
-## Acceptance criteria
-
-Sve opcije se sačuvaju i perzistiraju kroz restart.
-Font size live preview radi. Clear credentials zahtijeva confirmation.

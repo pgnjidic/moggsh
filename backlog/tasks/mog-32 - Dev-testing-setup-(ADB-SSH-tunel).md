@@ -11,6 +11,22 @@ dependencies: []
 priority: medium
 ---
 
+## Description
+
+<!-- SECTION:DESCRIPTION:BEGIN -->
+## Kontekst
+
+VPS je Hetzner, nema KVM (`/proc/cpuinfo` vratio 0) — Android emulator ne radi.
+Jedini funkcionalni dev workflow je ADB over SSH tunnel sa fizičkim telefonom.
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 `flutter run` na VPS-u deploya direktno na fizički telefon via ADB SSH tunel
+- [ ] #2 Hot reload (`r`) radi normalno kroz tunel
+- [ ] #3 APK sideload flow dokumentovan i testiran kao fallback
+<!-- AC:END -->
+
+
 ## Kontekst
 
 VPS je Hetzner, nema KVM (`/proc/cpuinfo` vratio 0) — Android emulator ne radi.
@@ -51,7 +67,3 @@ flutter build apk --debug
 python3 -m http.server 8080   # servira APK na http://vps-ip:8080
 # na telefonu: otvori URL, instaliraj
 ```
-
-## Acceptance criteria
-
-`flutter run` na VPS-u deploya direktno na fizički telefon. Hot reload radi.

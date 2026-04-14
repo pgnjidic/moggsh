@@ -11,9 +11,20 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Tab sistem koji miješa lokalne i remote sesije. Swipe između projekata.
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 3 simultana taba (2 local, 1 SSH) rade nezavisno
+- [ ] #2 Swipe left/right između tabova radi
+- [ ] #3 Svaki tab ima nezavisan scrollback buffer
+- [ ] #4 Status dot tačno prikazuje stanje sesije (active/idle/offline)
+- [ ] #5 Long-press rename taba radi
+<!-- AC:END -->
+
 
 ## Data model
 
@@ -50,8 +61,3 @@ Max tabova: 8 (Android memory constraint).
 ## Blokiran na
 
 - 0005 (terminal MVP mora raditi)
-
-## Acceptance criteria
-
-3 simultana taba (2 local, 1 SSH), swipe između njih, svaki ima nezavisan scrollback buffer.
-Status dot tačno prikazuje stanje sesije. Long-press rename radi.

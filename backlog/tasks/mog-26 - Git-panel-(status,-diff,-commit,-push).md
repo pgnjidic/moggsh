@@ -11,10 +11,20 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Vizualni git panel unutar app-a — git workflow bez terminala.
 Radi i za local mode i za SSH mode (isti UI, isti shell-out).
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Git repo, promijeni fajl, otvori git panel → promjena vidljiva sa M ikonom
+- [ ] #2 Stage fajl, unesi commit message, commit, push — bez direktnog terminala
+- [ ] #3 Diff pregled radi za .dart i .md fajlove
+- [ ] #4 Branch info (trenutna branch + remote tracking) tačan
+<!-- AC:END -->
+
 
 ## Pristup
 
@@ -46,8 +56,3 @@ Radi i za local mode i za SSH mode (isti UI, isti shell-out).
 
 - Sve git operacije: shell-out na `git` binary (ne libgit2)
 - Shell-out via terminal PTY channel, rezultati parsirani i prikazani vizualno
-
-## Acceptance criteria
-
-Git repo, promijeni fajl, otvori git panel, stage, commit message, commit, push —
-sve bez direktnog terminala. Diff se prikazuje ispravno za .dart fajl.

@@ -11,9 +11,19 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Observability za production app. Znati šta se crasha i koje featurese korisnici koriste.
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Simulated crash vidljiv u Sentry dashboard u < 2 minute
+- [ ] #2 Events (app_opened, tool_installed, approval_used) aparaju u PostHog
+- [ ] #3 Opt-out toggle zaustavi sve tracking
+- [ ] #4 DSN nije hardcoded u source code-u (environment variable)
+<!-- AC:END -->
+
 
 ## Crash reporting — Sentry
 
@@ -48,9 +58,3 @@ Nema PII (personally identifiable information).
 - Opt-out toggle u Settings → About
 - Opt-out disables i Sentry i PostHog
 - GDPR: privacy policy URL u Settings i na Play Store listingu
-
-## Acceptance criteria
-
-Simulated crash vidljiv u Sentry dashboard u < 2 minute.
-Events aparaju u PostHog. Opt-out toggle zaustavi sve eventi.
-DSN nije hardcoded u source code-u.

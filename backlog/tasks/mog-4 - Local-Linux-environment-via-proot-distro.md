@@ -11,10 +11,20 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Embeddati Linux environment u Android app bez root-a, koristeći proot.
 Ovo je osnova Local moda — bez ovoga nema "instaliraj i kodiraj".
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 `bash` shell radi unutar app-a, `ls`, `echo $HOME`, `pwd` funkcionišu
+- [ ] #2 Filesystem persists između restarta app-a
+- [ ] #3 Progress screen prikazan tokom prvog extractiona
+- [ ] #4 Alpine Linux ARM64 environment funkcionalan na fizičkom Android uređaju
+<!-- AC:END -->
+
 
 ## Zadaci
 
@@ -34,8 +44,3 @@ Ovo je osnova Local moda — bez ovoga nema "instaliraj i kodiraj".
 
 Da li koristiti Termux bootstrap libraries kao dependency umjesto bundlati vlastiti?
 Trade-off: manji APK vs bolji UX kontrola. Trenutna preporuka: embed direktno.
-
-## Acceptance criteria
-
-`bash` shell radi unutar app-a, možeš pokrenuti `ls`, `echo $HOME`, `pwd`.
-Filesystem survives app restart. Progress screen tokom prvog extractiona.

@@ -11,10 +11,20 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Landscape je odličan za čitanje dugačkog AI outputa — full width terminal.
 Split pane je killer feature za power users: agent u lijevom, output/logs u desnom.
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Rotate u landscape → terminal zauzima punu širinu ekrana
+- [ ] #2 Split pane: dva terminala rade nezavisno sa nezavisnim scrollback bufferima
+- [ ] #3 Divider je resizeable drag-om (30%–70%)
+- [ ] #4 Ctrl+C u jednom pane ne utječe na drugi
+<!-- AC:END -->
+
 
 ## Layout promjene u landscape
 
@@ -46,8 +56,3 @@ Split pane je killer feature za power users: agent u lijevom, output/logs u desn
 
 - Auto: +1px u landscape (više piksela dostupno po liniji)
 - Override u Settings
-
-## Acceptance criteria
-
-Rotate → terminal zauzima punu širinu. Split pane: dva terminala rade nezavisno,
-divider je resizeable. Ctrl+C u jednom pane ne utječe na drugi.

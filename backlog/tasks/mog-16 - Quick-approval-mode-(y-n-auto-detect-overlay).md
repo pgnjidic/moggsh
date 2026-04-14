@@ -11,10 +11,21 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Kada AI agent traži potvrdu, prikaži veliki Y/N overlay umjesto tipkanja.
 Jedan tap umjesto tipkanja `y` + Enter.
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Claude Code ispiše '(y/n)' → approval banner se pojavi u < 500ms
+- [ ] #2 Tap Y → odgovor poslan, agent nastavlja
+- [ ] #3 Tap N → negativan odgovor poslan
+- [ ] #4 False positive → dismiss bez slanja radi
+- [ ] #5 Toggle za isključivanje feature-a u Settings radi
+<!-- AC:END -->
+
 
 ## Pattern detection (regex na incoming output)
 
@@ -56,8 +67,3 @@ In-terminal banner, NE full-screen overlay (terminal mora ostati vidljiv):
 
 - Toggle On/Off za cijeli feature
 - Custom pattern lista
-
-## Acceptance criteria
-
-Claude Code ispiše "Do you want to proceed? (y/n)" → banner se pojavi < 500ms.
-Tap Y → agent nastavlja. False positive → dismiss bez slanja. Toggle u Settings radi.

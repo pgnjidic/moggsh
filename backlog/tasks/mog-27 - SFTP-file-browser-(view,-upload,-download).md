@@ -11,10 +11,20 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 SFTP integracija za SSH mode — pregled i transfer fajlova bez scp komandi.
 Koristi istu SSH sesiju (SFTP subsystem, ne nova konekcija).
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Navigiraj do `~/projects` na SSH serveru, tap na .py fajl → syntax highlighted preview
+- [ ] #2 Download fajla → pojavi se u Android Downloads folderu
+- [ ] #3 Upload fajla sa Androida na server radi
+- [ ] #4 Progress indicator prikazan za fajlove > 1MB
+<!-- AC:END -->
+
 
 ## Pristup
 
@@ -43,9 +53,3 @@ Koristi istu SSH sesiju (SFTP subsystem, ne nova konekcija).
 ## Pro feature
 
 SFTP browser je Pro-only.
-
-## Acceptance criteria
-
-Konekcija na SSH, navigiraj do `~/projects`, tap na `.py` fajl → syntax highlighted
-preview. Download fajla → pojavi se u Android Downloads folderu.
-Upload radi u suprotnom smjeru.

@@ -11,10 +11,21 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Freemium model sa Google Play Billing. Cilj: konverzija power usera koji
 zaista koriste app, bez agresivnih paywalla koji alieniraju nove korisnike.
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Subscription flow radi u Play Store sandbox okruženju
+- [ ] #2 Pro features dostupne odmah nakon purchase
+- [ ] #3 Free tier ograničenja enforced (max 2 SSH profila, 5 snippeta)
+- [ ] #4 Restore purchases radi na reinstalaciji app-a
+- [ ] #5 7-dana trial ne zahtijeva kreditnu karticu
+<!-- AC:END -->
+
 
 ## Pro features (locked za free tier)
 
@@ -48,10 +59,3 @@ Restore purchases: dugme u Settings za restore pri reinstalaciji.
 - NE agresivni paywalls — bottom sheet sa pricing na Pro feature tap
 - Trial: 7 dana Pro besplatno na onboardingu (bez kreditne kartice)
 - Pro badge: subtilni `PRO` pill u Settings header-u
-
-## Acceptance criteria
-
-Subscription flow radi u Play Store sandbox okruženju.
-Pro features dostupne odmah nakon purchase.
-Free tier ograničenja enforced.
-Restore purchases radi na reinstalaciji.

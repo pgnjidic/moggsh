@@ -11,9 +11,19 @@ dependencies: []
 priority: medium
 ---
 
-## Opis
+## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Android App Widget za brzi pristup omiljenim serverima/projektima direktno sa home screena.
+<!-- SECTION:DESCRIPTION:END -->
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Dodaj medium widget na home screen → prikazuje 3 servera
+- [ ] #2 Tap na server u widgetu → app otvori i počne konekciju automatski
+- [ ] #3 Status dots se refreshuju svakih 30 minuta
+- [ ] #4 Free tier: samo 1 server vidljiv, ostali su Pro placeholder
+<!-- AC:END -->
+
 
 ## Widget varijante
 
@@ -38,8 +48,3 @@ Android App Widget za brzi pristup omiljenim serverima/projektima direktno sa ho
 
 - Free: max 1 server na widget-u (ostali su placeholder za upgrade)
 - Pro: sve varijante, unlimited servera
-
-## Acceptance criteria
-
-Dodaj medium widget na home screen, prikazuje 3 servera, tap na jedan →
-app se otvori i počne konekciju automatski. Free tier: samo 1 server vidljiv.
