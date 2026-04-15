@@ -29,7 +29,7 @@ dependencies:
   webview_flutter: ^4.10.0
 
   # PTY (pseudo-terminal) for local shell
-  flutter_pty: ^0.3.1
+  flutter_pty: ^0.4.2
 
   # HTTP for downloading rootfs/proot on first run
   http: ^1.2.2
