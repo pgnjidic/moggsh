@@ -1,11 +1,11 @@
 ---
 id: MOG-14
 title: Mosh podrška za nestabilan internet
-status: In Progress
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-04-14'
-updated_date: '2026-04-14 20:16'
+updated_date: '2026-04-14 20:17'
 labels:
   - s3
 dependencies: []
@@ -21,8 +21,8 @@ pauze interneta i sleep/wake cikluse. Idealan za mobilni razvoj.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Konekcija via Mosh uspostavljena kad je mosh-server dostupan
-- [ ] #2 Airplane mode 10s → automatski reconnect bez gubitka sesije
-- [ ] #3 'Connected via Mosh' badge vidljiv u tab bar-u
-- [ ] #4 Fallback na SSH ako mosh nije dostupan na serveru
+- [x] #1 Konekcija via Mosh uspostavljena kad je mosh-server dostupan
+- [x] #2 Airplane mode 10s → automatski reconnect bez gubitka sesije
+- [x] #3 'Connected via Mosh' badge vidljiv u tab bar-u
+- [x] #4 Fallback na SSH ako mosh nije dostupan na serveru
 <!-- AC:END -->
