@@ -53,7 +53,7 @@ class _LandscapeSplitViewState extends State<LandscapeSplitView> {
               child: Container(
                 width: 2, height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.4),
+                  color: AppColors.primary.withValues(alpha:0.4),
                   borderRadius: BorderRadius.circular(1),
                 ),
               ),

@@ -100,7 +100,7 @@ class _ShortcutBarState extends State<ShortcutBar> {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
               itemCount: all.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 4),
+              separatorBuilder: (_, _) => const SizedBox(width: 4),
               itemBuilder: (_, i) => _KeyButton(
                 key: ValueKey(all[i].label),
                 label: all[i].label,
@@ -141,7 +141,7 @@ class _KeyButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(3),
           border: Border.all(
             color: isCtrl
-                ? const Color(0xFFFF5555).withOpacity(0.5)
+                ? const Color(0xFFFF5555).withValues(alpha: 0.5)
                 : const Color(0xFF2A2A3E),
           ),
         ),

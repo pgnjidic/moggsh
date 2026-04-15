@@ -15,8 +15,8 @@ class ScrollToPromptFab extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surface2,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.primary.withOpacity(0.4)),
-          boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.15), blurRadius: 12)],
+          border: Border.all(color: AppColors.primary.withValues(alpha:0.4)),
+          boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha:0.15), blurRadius: 12)],
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: const [
           Icon(Icons.keyboard_double_arrow_down, color: AppColors.primary, size: 14),

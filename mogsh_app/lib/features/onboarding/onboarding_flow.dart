@@ -123,7 +123,7 @@ class _PathCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha:0.3)),
         ),
         child: Row(children: [
           Icon(icon, color: color, size: 28),
@@ -133,7 +133,7 @@ class _PathCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(subtitle, style: const TextStyle(color: AppColors.textMuted, fontSize: 11, height: 1.5)),
           ])),
-          Icon(Icons.arrow_forward_ios, color: color.withOpacity(0.5), size: 14),
+          Icon(Icons.arrow_forward_ios, color: color.withValues(alpha:0.5), size: 14),
         ]),
       ),
     );

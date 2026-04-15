@@ -107,7 +107,7 @@ class _ApprovalOverlayState extends State<ApprovalOverlay>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          border: Border.all(color: color.withOpacity(0.7)),
+          border: Border.all(color: color.withValues(alpha: 0.7)),
           borderRadius: BorderRadius.circular(3),
         ),
         child: Text(label,

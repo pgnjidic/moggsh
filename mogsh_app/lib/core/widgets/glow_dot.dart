@@ -35,7 +35,7 @@ class _GlowDotState extends State<GlowDot> with SingleTickerProviderStateMixin {
     }
     return AnimatedBuilder(
       animation: _glow,
-      builder: (_, __) => _dot(_glow.value),
+      builder: (_, _) => _dot(_glow.value),
     );
   }
 
@@ -45,7 +45,7 @@ class _GlowDotState extends State<GlowDot> with SingleTickerProviderStateMixin {
     decoration: BoxDecoration(
       color: widget.color,
       shape: BoxShape.circle,
-      boxShadow: [BoxShadow(color: widget.color.withOpacity(0.7), blurRadius: blur, spreadRadius: 1)],
+      boxShadow: [BoxShadow(color: widget.color.withValues(alpha:0.7), blurRadius: blur, spreadRadius: 1)],
     ),
   );
 }
@@ -69,8 +69,8 @@ class NeonButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: filled ? color : Colors.transparent,
           borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: color.withOpacity(0.8)),
-          boxShadow: [BoxShadow(color: color.withOpacity(0.2), blurRadius: 8, spreadRadius: 0)],
+          border: Border.all(color: color.withValues(alpha:0.8)),
+          boxShadow: [BoxShadow(color: color.withValues(alpha:0.2), blurRadius: 8, spreadRadius: 0)],
         ),
         child: Text(label, style: TextStyle(
           color: filled ? const Color(0xFF0A0A0F) : color,

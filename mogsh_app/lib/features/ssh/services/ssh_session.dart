@@ -14,7 +14,6 @@ class SshSession {
   SSHSession? _shell;
   SshConnectionState _state = SshConnectionState.disconnected;
   String? _lastError;
-  String? _hostFingerprint;
   String? _knownFingerprint;
 
   SshConnectionState get state => _state;

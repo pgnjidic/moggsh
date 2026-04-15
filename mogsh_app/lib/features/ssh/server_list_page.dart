@@ -17,7 +17,6 @@ class _ServerListPageState extends State<ServerListPage> {
 
   static const _green  = Color(0xFF00FF88);
   static const _bg     = Color(0xFF0A0A0F);
-  static const _surface= Color(0xFF12121A);
   static const _muted  = Color(0xFF666688);
 
   @override
@@ -254,7 +253,6 @@ class _SshTerminalPage extends StatefulWidget {
 }
 
 class _SshTerminalPageState extends State<_SshTerminalPage> {
-  final _key = GlobalKey();
 
   @override
   void dispose() { widget.session.dispose(); super.dispose(); }

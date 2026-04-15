@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:dartssh2/dartssh2.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
@@ -16,10 +17,14 @@ class SshKeyManager {
   static const _storage = FlutterSecureStorage();
   static final _localAuth = LocalAuthentication();
 
-  /// Convert SSHHostKey to OpenSSH authorized_keys format: "type base64(wireBytes)"
-  static String _toOpenSSH(SSHHostKey hostKey) {
-    final encoded = hostKey.encode();
-    final type = SSHHostKey.getType(encoded);
+  /// Convert a dartssh2 public key object to OpenSSH authorized_keys format.
+  /// SSHHostKey is an internal type not exported by dartssh2, so we use dynamic
+  /// and parse the type from the SSH wire format (4-byte length + type string).
+  static String _toOpenSSH(dynamic hostKey) {
+    final Uint8List encoded = hostKey.encode() as Uint8List;
+    // SSH wire format: uint32 type_len + type_bytes + ...
+    final typeLen = ByteData.sublistView(encoded, 0, 4).getUint32(0);
+    final type = utf8.decode(encoded.sublist(4, 4 + typeLen));
     return '$type ${base64.encode(encoded)}';
   }
 

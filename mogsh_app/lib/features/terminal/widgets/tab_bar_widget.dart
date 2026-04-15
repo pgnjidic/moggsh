@@ -21,10 +21,8 @@ class MogshTabBar extends StatelessWidget {
   });
 
   static const _bg      = Color(0xFF0A0A0F);
-  static const _surface = Color(0xFF12121A);
   static const _green   = Color(0xFF00FF88);
   static const _muted   = Color(0xFF444466);
-  static const _border  = Color(0xFF1E1E2E);
 
   Color _dotColor(SessionState state) {
     return switch (state) {

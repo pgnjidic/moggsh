@@ -56,9 +56,7 @@ class _GitPanelState extends State<GitPanel> {
   List<GitFileStatus> _files = [];
   String _branch = '';
   String? _diffContent;
-  String? _diffPath;
   final _commitCtrl = TextEditingController();
-  bool _pushing = false;
 
   @override
   void initState() { super.initState(); _refresh(); }
@@ -104,7 +102,7 @@ class _GitPanelState extends State<GitPanel> {
               dense: true,
               onTap: () async {
                 final diff = await widget.service.diff(f.path);
-                setState(() { _diffContent = diff; _diffPath = f.path; });
+                setState(() { _diffContent = diff; });
               },
               leading: Text(f.status,
                   style: TextStyle(color: _statusColor(f.status), fontFamily: 'monospace', fontSize: 12)),
@@ -115,8 +113,8 @@ class _GitPanelState extends State<GitPanel> {
                 activeColor: AppColors.primary,
                 checkColor: AppColors.bg,
                 onChanged: (v) async {
-                  if (v == true) await widget.service.stage(f.path);
-                  else await widget.service.unstage(f.path);
+                  if (v == true) { await widget.service.stage(f.path); }
+                  else { await widget.service.unstage(f.path); }
                   _refresh();
                 },
               ),
@@ -164,9 +162,7 @@ class _GitPanelState extends State<GitPanel> {
               })),
               const SizedBox(width: 8),
               Expanded(child: _btn('Push', AppColors.secondary, () async {
-                setState(() => _pushing = true);
                 await widget.service.push();
-                setState(() => _pushing = false);
               })),
             ]),
           ]),
@@ -180,7 +176,7 @@ class _GitPanelState extends State<GitPanel> {
     child: Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-          border: Border.all(color: color.withOpacity(0.7)),
+          border: Border.all(color: color.withValues(alpha: 0.7)),
           borderRadius: BorderRadius.circular(3)),
       child: Center(child: Text(label,
           style: TextStyle(color: color, fontFamily: 'monospace', fontSize: 12))),

@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:archive/archive_io.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_pty/flutter_pty.dart';
 import 'package:http/http.dart' as http;
@@ -140,7 +138,7 @@ class PtermService {
 
   /// Send input to the PTY (keyboard data)
   void write(String data) {
-    _pty?.write(const Utf8Encoder().convert(data) as Uint8List);
+    _pty?.write(const Utf8Encoder().convert(data));
   }
 
   /// Resize PTY

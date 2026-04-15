@@ -13,10 +13,7 @@ class ToolInstallerPage extends StatefulWidget {
 
 class _ToolInstallerPageState extends State<ToolInstallerPage> {
   static const _bg      = Color(0xFF0A0A0F);
-  static const _surface = Color(0xFF12121A);
   static const _green   = Color(0xFF00FF88);
-  static const _cyan    = Color(0xFF00D4FF);
-  static const _red     = Color(0xFFFF5555);
   static const _muted   = Color(0xFF666688);
 
   @override
@@ -37,7 +34,7 @@ class _ToolInstallerPageState extends State<ToolInstallerPage> {
                   child: ListView.separated(
                     padding: const EdgeInsets.all(16),
                     itemCount: tools.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (_, i) => _ToolCard(
                       tool: tools[i],
                       onInstall: () => widget.service.install(tools[i]),
@@ -104,10 +101,8 @@ class _ToolCard extends StatelessWidget {
 
   const _ToolCard({required this.tool, required this.onInstall, required this.onAuth});
 
-  static const _bg      = Color(0xFF0A0A0F);
   static const _surface = Color(0xFF12121A);
   static const _green   = Color(0xFF00FF88);
-  static const _cyan    = Color(0xFF00D4FF);
   static const _red     = Color(0xFFFF5555);
   static const _muted   = Color(0xFF666688);
   static const _border  = Color(0xFF1E1E2E);
@@ -135,9 +130,9 @@ class _ToolCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: _green.withOpacity(0.15),
+                        color: _green.withValues(alpha:0.15),
                         borderRadius: BorderRadius.circular(3),
-                        border: Border.all(color: _green.withOpacity(0.4)),
+                        border: Border.all(color: _green.withValues(alpha:0.4)),
                       ),
                       child: Text(tool.version ?? '✓',
                           style: const TextStyle(color: _green, fontSize: 10, fontFamily: 'monospace')),
@@ -178,8 +173,6 @@ class _ActionButton extends StatelessWidget {
   static const _green  = Color(0xFF00FF88);
   static const _cyan   = Color(0xFF00D4FF);
   static const _red    = Color(0xFFFF5555);
-  static const _muted  = Color(0xFF666688);
-  static const _bg     = Color(0xFF0A0A0F);
 
   @override
   Widget build(BuildContext context) {
@@ -210,7 +203,7 @@ class _ActionButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          border: Border.all(color: color.withOpacity(0.7)),
+          border: Border.all(color: color.withValues(alpha:0.7)),
           borderRadius: BorderRadius.circular(4),
         ),
         child: Text(label,

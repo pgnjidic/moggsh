@@ -65,7 +65,7 @@ class TabManager extends ChangeNotifier {
 
   @override
   void dispose() {
-    for (final tab in _tabs) tab.dispose();
+    for (final tab in _tabs) { tab.dispose(); }
     super.dispose();
   }
 }

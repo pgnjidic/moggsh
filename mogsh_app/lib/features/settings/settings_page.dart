@@ -60,7 +60,7 @@ class _SettingsPageState extends State<SettingsPage> {
       trailing: Switch(
         value: value,
         onChanged: (v) { onChanged(v); setState(() {}); },
-        activeColor: AppColors.primary,
+        activeThumbColor: AppColors.primary,
         inactiveTrackColor: AppColors.surface2,
       ),
     );
@@ -95,7 +95,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _action(String label, Color color, VoidCallback onTap) => ListTile(
     dense: true,
     title: Text(label, style: TextStyle(color: color, fontFamily: 'monospace', fontSize: 13)),
-    trailing: Icon(Icons.chevron_right, color: color.withOpacity(0.5), size: 16),
+    trailing: Icon(Icons.chevron_right, color: color.withValues(alpha: 0.5), size: 16),
     onTap: onTap,
   );
 

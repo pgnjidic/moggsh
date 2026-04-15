@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/glow_dot.dart';
@@ -79,7 +78,7 @@ class AgentStatusBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: manager,
-      builder: (_, __) => Container(
+      builder: (_, _) => Container(
         height: 24,
         color: AppColors.bg,
         padding: const EdgeInsets.symmetric(horizontal: 8),
