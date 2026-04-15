@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:dartssh2/dartssh2.dart';
 import '../models/server_profile.dart';
 import 'ssh_session.dart';
 

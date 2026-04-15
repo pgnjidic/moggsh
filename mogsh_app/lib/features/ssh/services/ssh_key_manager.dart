@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+import 'dart:convert';
 import 'package:dartssh2/dartssh2.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
@@ -7,8 +7,7 @@ import 'package:uuid/uuid.dart';
 class SshKeyEntry {
   final String id;
   final String label;
-  final String publicKey;  // OpenSSH format
-  // Private key stored separately in secure storage, fetched only when needed
+  final String publicKey; // OpenSSH format: "ssh-ed25519 AAAA..."
 
   const SshKeyEntry({required this.id, required this.label, required this.publicKey});
 }
@@ -17,25 +16,33 @@ class SshKeyManager {
   static const _storage = FlutterSecureStorage();
   static final _localAuth = LocalAuthentication();
 
-  /// Generate Ed25519 keypair, store private key in secure storage
+  /// Convert SSHHostKey to OpenSSH authorized_keys format: "type base64(wireBytes)"
+  static String _toOpenSSH(SSHHostKey hostKey) {
+    final encoded = hostKey.encode();
+    final type = SSHHostKey.getType(encoded);
+    return '$type ${base64.encode(encoded)}';
+  }
+
+  /// Key generation requires ssh-keygen which is not available on Android without proot.
+  /// Use [importPem] to add an existing key, or generate one externally.
   static Future<SshKeyEntry> generate(String label) async {
-    final key = await SSHKeyPair.generate(SSHKeyAlgorithm.ed25519);
-    final id = const Uuid().v4();
-    final pubKey = key.toPublicKey();
-
-    await _storage.write(key: 'sshkey_priv_$id', value: key.toPem());
-    await _storage.write(key: 'sshkey_pub_$id', value: pubKey);
-    await _storage.write(key: 'sshkey_label_$id', value: label);
-    await _addKeyIndex(id);
-
-    return SshKeyEntry(id: id, label: label, publicKey: pubKey);
+    throw UnimplementedError(
+      'On-device key generation is not supported yet. '
+      'Please generate a key on your computer and import the PEM.',
+    );
   }
 
   /// Import from OpenSSH private key PEM string
-  static Future<SshKeyEntry> importPem(String pem, String label, {String? passphrase}) async {
-    final key = SSHKeyPair.fromPem(pem, passphrase);
+  static Future<SshKeyEntry> importPem(
+    String pem,
+    String label, {
+    String? passphrase,
+  }) async {
+    final keys = SSHKeyPair.fromPem(pem, passphrase);
+    if (keys.isEmpty) throw const FormatException('No keys found in PEM data');
+    final key = keys.first;
     final id = const Uuid().v4();
-    final pubKey = key.toPublicKey();
+    final pubKey = _toOpenSSH(key.toPublicKey());
 
     await _storage.write(key: 'sshkey_priv_$id', value: pem);
     await _storage.write(key: 'sshkey_pub_$id', value: pubKey);
@@ -64,8 +71,11 @@ class SshKeyManager {
     return entries;
   }
 
-  /// Get private key — requires biometric auth for export
-  static Future<SSHKeyPair?> getPrivateKey(String id, {bool requireBiometric = false}) async {
+  /// Get private key — optionally requires biometric auth
+  static Future<SSHKeyPair?> getPrivateKey(
+    String id, {
+    bool requireBiometric = false,
+  }) async {
     if (requireBiometric) {
       final authed = await _localAuth.authenticate(
         localizedReason: 'Authenticate to access SSH private key',
@@ -76,7 +86,8 @@ class SshKeyManager {
 
     final pem = await _storage.read(key: 'sshkey_priv_$id');
     if (pem == null) return null;
-    return SSHKeyPair.fromPem(pem);
+    final keys = SSHKeyPair.fromPem(pem);
+    return keys.isEmpty ? null : keys.first;
   }
 
   static Future<void> delete(String id) async {
@@ -88,21 +99,27 @@ class SshKeyManager {
 
   static Future<void> _addKeyIndex(String id) async {
     final raw = await _storage.read(key: 'sshkey_index') ?? '[]';
-    final list = raw.substring(1, raw.length - 1).split(',')
+    final list = raw
+        .substring(1, raw.length - 1)
+        .split(',')
         .map((s) => s.trim().replaceAll('"', ''))
         .where((s) => s.isNotEmpty)
         .toList();
     list.add(id);
-    await _storage.write(key: 'sshkey_index', value: '["${list.join('","')}"]');
+    await _storage.write(
+        key: 'sshkey_index', value: '["${list.join('","')}"]');
   }
 
   static Future<void> _removeKeyIndex(String id) async {
     final raw = await _storage.read(key: 'sshkey_index') ?? '[]';
-    final list = raw.substring(1, raw.length - 1).split(',')
+    final list = raw
+        .substring(1, raw.length - 1)
+        .split(',')
         .map((s) => s.trim().replaceAll('"', ''))
         .where((s) => s.isNotEmpty && s != id)
         .toList();
-    await _storage.write(key: 'sshkey_index',
+    await _storage.write(
+        key: 'sshkey_index',
         value: list.isEmpty ? '[]' : '["${list.join('","')}"]');
   }
 }
