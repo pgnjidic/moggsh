@@ -1,11 +1,11 @@
 ---
 id: MOG-20
 title: Crash reporting + analytics
-status: In Progress
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-04-14'
-updated_date: '2026-04-14 20:19'
+updated_date: '2026-04-15 06:45'
 labels:
   - s5
 dependencies: []
@@ -20,8 +20,8 @@ Observability za production app. Znati šta se crasha i koje featurese korisnici
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Simulated crash vidljiv u Sentry dashboard u < 2 minute
-- [ ] #2 Events (app_opened, tool_installed, approval_used) aparaju u PostHog
-- [ ] #3 Opt-out toggle zaustavi sve tracking
-- [ ] #4 DSN nije hardcoded u source code-u (environment variable)
+- [x] #1 Simulated crash vidljiv u Sentry dashboard u < 2 minute
+- [x] #2 Events (app_opened, tool_installed, approval_used) aparaju u PostHog
+- [x] #3 Opt-out toggle zaustavi sve tracking
+- [x] #4 DSN nije hardcoded u source code-u (environment variable)
 <!-- AC:END -->

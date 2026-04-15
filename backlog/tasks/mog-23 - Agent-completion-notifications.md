@@ -1,11 +1,11 @@
 ---
 id: MOG-23
 title: Agent completion notifications
-status: In Progress
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-04-14'
-updated_date: '2026-04-14 20:19'
+updated_date: '2026-04-15 06:45'
 labels:
   - v1.1
 dependencies: []
@@ -21,8 +21,8 @@ Nema potrebe stare u ekran dok Claude Code radi.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Pokreni agent task, minimizuj app → notifikacija stigne < 3s od completion
-- [ ] #2 Tap notifikacije → otvori terminal tab na zadnji output
-- [ ] #3 Quiet hours: nema notifikacije u postavljenom periodu
-- [ ] #4 Toggle per-tab radi (samo označeni tabovi šalju notifikacije)
+- [x] #1 Pokreni agent task, minimizuj app → notifikacija stigne < 3s od completion
+- [x] #2 Tap notifikacije → otvori terminal tab na zadnji output
+- [x] #3 Quiet hours: nema notifikacije u postavljenom periodu
+- [x] #4 Toggle per-tab radi (samo označeni tabovi šalju notifikacije)
 <!-- AC:END -->

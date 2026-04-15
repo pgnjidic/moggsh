@@ -1,11 +1,11 @@
 ---
 id: MOG-28
 title: Landscape mode + split pane (dva terminala side-by-side)
-status: In Progress
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-04-14'
-updated_date: '2026-04-14 20:19'
+updated_date: '2026-04-15 06:45'
 labels:
   - v1.2
 dependencies: []
@@ -21,8 +21,8 @@ Split pane je killer feature za power users: agent u lijevom, output/logs u desn
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Rotate u landscape → terminal zauzima punu širinu ekrana
-- [ ] #2 Split pane: dva terminala rade nezavisno sa nezavisnim scrollback bufferima
-- [ ] #3 Divider je resizeable drag-om (30%–70%)
-- [ ] #4 Ctrl+C u jednom pane ne utječe na drugi
+- [x] #1 Rotate u landscape → terminal zauzima punu širinu ekrana
+- [x] #2 Split pane: dva terminala rade nezavisno sa nezavisnim scrollback bufferima
+- [x] #3 Divider je resizeable drag-om (30%–70%)
+- [x] #4 Ctrl+C u jednom pane ne utječe na drugi
 <!-- AC:END -->

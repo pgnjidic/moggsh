@@ -1,11 +1,11 @@
 ---
 id: MOG-27
 title: 'SFTP file browser (view, upload, download)'
-status: In Progress
+status: Done
 assignee:
   - '@agent'
 created_date: '2026-04-14'
-updated_date: '2026-04-14 20:19'
+updated_date: '2026-04-15 06:45'
 labels:
   - v1.2
 dependencies: []
@@ -21,8 +21,8 @@ Koristi istu SSH sesiju (SFTP subsystem, ne nova konekcija).
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Navigiraj do `~/projects` na SSH serveru, tap na .py fajl → syntax highlighted preview
-- [ ] #2 Download fajla → pojavi se u Android Downloads folderu
-- [ ] #3 Upload fajla sa Androida na server radi
-- [ ] #4 Progress indicator prikazan za fajlove > 1MB
+- [x] #1 Navigiraj do `~/projects` na SSH serveru, tap na .py fajl → syntax highlighted preview
+- [x] #2 Download fajla → pojavi se u Android Downloads folderu
+- [x] #3 Upload fajla sa Androida na server radi
+- [x] #4 Progress indicator prikazan za fajlove > 1MB
 <!-- AC:END -->
