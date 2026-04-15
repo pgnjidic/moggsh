@@ -3,6 +3,8 @@ import 'models/server_profile.dart';
 import 'services/server_profile_service.dart';
 import 'services/ssh_session.dart';
 import 'widgets/tmux_picker.dart';
+import '../terminal/terminal_widget.dart';
+import '../terminal/widgets/shortcut_bar.dart';
 
 class ServerListPage extends StatefulWidget {
   const ServerListPage({super.key});
@@ -253,6 +255,21 @@ class _SshTerminalPage extends StatefulWidget {
 }
 
 class _SshTerminalPageState extends State<_SshTerminalPage> {
+  final _terminalKey = GlobalKey<TerminalWidgetState>();
+
+  void _onReady() {
+    widget.session.output.listen((data) {
+      _terminalKey.currentState?.write(data);
+    });
+    // Show connection state
+    widget.session.stateChanges.listen((state) {
+      if (state == SshConnectionState.disconnected) {
+        _terminalKey.currentState?.write('\r\n\x1b[33m[disconnected]\x1b[0m\r\n');
+      } else if (state == SshConnectionState.reconnecting) {
+        _terminalKey.currentState?.write('\r\n\x1b[33m[reconnecting...]\x1b[0m\r\n');
+      }
+    });
+  }
 
   @override
   void dispose() { widget.session.dispose(); super.dispose(); }
@@ -261,14 +278,47 @@ class _SshTerminalPageState extends State<_SshTerminalPage> {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: const Color(0xFF0A0A0F),
     appBar: AppBar(
-      backgroundColor: const Color(0xFF0A0A0F),
-      title: Text(widget.title,
-          style: const TextStyle(color: Color(0xFF00FF88), fontFamily: 'monospace', fontSize: 13)),
+      backgroundColor: const Color(0xFF12121A),
+      elevation: 0,
+      titleSpacing: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Color(0xFF666688)),
+        icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF666688), size: 16),
         onPressed: () { widget.session.disconnect(); Navigator.pop(context); },
       ),
+      title: Row(children: [
+        Container(
+          width: 7, height: 7,
+          decoration: BoxDecoration(
+            color: widget.session.state == SshConnectionState.connected
+                ? const Color(0xFF00FF88) : const Color(0xFFFF5555),
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(widget.title,
+            style: const TextStyle(color: Colors.white, fontFamily: 'monospace', fontSize: 13)),
+        const SizedBox(width: 6),
+        Text(widget.session.profile.host,
+            style: const TextStyle(color: Color(0xFF666688), fontFamily: 'monospace', fontSize: 11)),
+      ]),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.close, color: Color(0xFFFF5555), size: 18),
+          onPressed: widget.session.sendCtrlC,
+          tooltip: 'Ctrl+C',
+        ),
+      ],
     ),
-    body: const Center(child: Text('Terminal here', style: TextStyle(color: Color(0xFF444466)))),
+    body: Column(children: [
+      Expanded(
+        child: TerminalWidget(
+          key: _terminalKey,
+          onReady: _onReady,
+          onInput: widget.session.write,
+          onResize: widget.session.resize,
+        ),
+      ),
+      ShortcutBar(onSend: widget.session.write),
+    ]),
   );
 }
