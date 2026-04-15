@@ -28,6 +28,7 @@ class MainActivity : FlutterActivity() {
                         stopService(Intent(this, TerminalForegroundService::class.java))
                         result.success(null)
                     }
+                    "getNativeLibDir" -> result.success(applicationInfo.nativeLibraryDir)
                     else -> result.notImplemented()
                 }
             }

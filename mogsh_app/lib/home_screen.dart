@@ -281,16 +281,16 @@ class _KeysPageState extends State<_KeysPage> {
                 try {
                   await SshKeyManager.importPem(
                       pemCtrl.text.trim(), labelCtrl.text.trim());
-                  if (context.mounted) Navigator.pop(context);
+                  if (!mounted) return;
+                  Navigator.pop(context);
                   _load();
                 } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text('Error: $e',
-                          style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
-                      backgroundColor: _red,
-                    ));
-                  }
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('Error: $e',
+                        style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
+                    backgroundColor: _red,
+                  ));
                 }
               },
               child: const Text('Import', style: TextStyle(fontFamily: 'monospace')),

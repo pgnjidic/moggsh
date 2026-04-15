@@ -10,11 +10,9 @@ import 'package:path_provider/path_provider.dart';
 const _platform = MethodChannel('app.mogsh.terminal/service');
 
 /// proot + Alpine Linux environment manager.
-/// Downloads and extracts Alpine rootfs + proot binary on first run,
-/// then launches a PTY session inside the chroot.
+/// proot ships as libproot.so in the APK's native library (always executable on Android).
+/// On first run: downloads Alpine rootfs and extracts it.
 class PtermService {
-  static const _prootUrl =
-      'https://github.com/termux/proot/releases/download/v5.3.0/proot-aarch64';
   static const _alpineUrl =
       'https://dl-cdn.alpinelinux.org/alpine/v3.20/releases/aarch64/alpine-minirootfs-3.20.0-aarch64.tar.gz';
 
@@ -38,42 +36,30 @@ class PtermService {
     return !marker.existsSync();
   }
 
-  /// First-run setup: download proot + Alpine rootfs with progress callback.
+  /// First-run setup: download Alpine rootfs with progress callback.
   /// [onProgress] receives (label, 0.0–1.0)
   Future<void> setup({
     required void Function(String label, double progress) onProgress,
   }) async {
     final appDir = await getApplicationSupportDirectory();
     final rootfsDir = Directory('${appDir.path}/rootfs');
-    final binDir = Directory('${appDir.path}/bin');
     rootfsDir.createSync(recursive: true);
-    binDir.createSync(recursive: true);
 
-    // 1. Download proot binary
-    onProgress('Downloading proot...', 0.05);
-    final prootFile = File('${binDir.path}/proot');
-    if (!prootFile.existsSync()) {
-      await _downloadFile(_prootUrl, prootFile, (p) {
-        onProgress('Downloading proot...', 0.05 + p * 0.2);
-      });
-      await Process.run('chmod', ['+x', prootFile.path]);
-    }
-
-    // 2. Download Alpine rootfs
-    onProgress('Downloading Alpine Linux...', 0.25);
+    // 1. Download Alpine rootfs
+    onProgress('Downloading Alpine Linux...', 0.05);
     final tarFile = File('${appDir.path}/alpine.tar.gz');
     if (!tarFile.existsSync()) {
       await _downloadFile(_alpineUrl, tarFile, (p) {
-        onProgress('Downloading Alpine Linux...', 0.25 + p * 0.45);
+        onProgress('Downloading Alpine Linux...', 0.05 + p * 0.65);
       });
     }
 
-    // 3. Extract rootfs
+    // 2. Extract rootfs
     onProgress('Extracting filesystem...', 0.70);
     await _extractTarGz(tarFile, rootfsDir);
     tarFile.deleteSync();
 
-    // 4. Mark setup complete
+    // 3. Mark setup complete
     File('${rootfsDir.path}/.setup_complete').writeAsStringSync('ok');
     onProgress('Done!', 1.0);
   }
@@ -83,7 +69,9 @@ class PtermService {
     if (_running) return;
 
     final appDir = await getApplicationSupportDirectory();
-    final prootPath = '${appDir.path}/bin/proot';
+    // proot ships as libproot.so in the APK native lib dir (always executable on Android).
+    final nativeLibDir = await _platform.invokeMethod<String>('getNativeLibDir');
+    final prootPath = '$nativeLibDir/libproot.so';
     final rootfsPath = '${appDir.path}/rootfs';
 
     _pty = Pty.start(
