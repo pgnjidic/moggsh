@@ -140,12 +140,24 @@
       }
     });
 
-    // Ready signal
-    window.addEventListener('load', () => {
-      fitAddon.fit();
+    // Tap to focus / show keyboard on Android
+    document.getElementById('terminal').addEventListener('click', () => {
+      term.focus();
+    });
+    document.getElementById('terminal').addEventListener('touchend', () => {
+      setTimeout(() => term.focus(), 50);
+    });
+
+    // Ready signal — try both on load and after short delay (WebView timing)
+    function sendReady() {
       if (window.FlutterChannel) {
         window.FlutterChannel.postMessage(JSON.stringify({ type: 'ready' }));
       }
+    }
+    window.addEventListener('load', () => {
+      fitAddon.fit();
+      sendReady();
+      setTimeout(sendReady, 500); // retry in case channel wasn't ready
     });
   </script>
 </body>

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'setup_screen.dart';
 import 'tabs/tab_manager.dart';
 import 'tabs/terminal_tab.dart';
 import 'terminal_widget.dart';
@@ -158,25 +159,47 @@ class _TabPage extends StatefulWidget {
 
 class _TabPageState extends State<_TabPage> with AutomaticKeepAliveClientMixin {
   @override
-  bool get wantKeepAlive => true; // Keep terminal alive when swiping between tabs
+  bool get wantKeepAlive => true;
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return TerminalWidget(
-      key: widget.terminalKey,
-      onReady: () {
-        // Replay scrollback buffer for this tab
-        for (final chunk in widget.tab.scrollbackBuffer) {
-          widget.terminalKey.currentState?.write(chunk);
-        }
-        // Listen to future output
-        widget.tab.output.listen((data) {
-          widget.terminalKey.currentState?.write(data);
-        });
-      },
-      onInput: widget.tab.sendInput,
-      onResize: widget.tab.resize,
-    );
+
+    // Show setup screen if Alpine/proot not yet downloaded
+    final service = widget.tab.localService;
+    if (service != null && widget.tab.sessionState == SessionState.idle && !widget.tab.hasCrashed) {
+      return FutureBuilder<bool>(
+        future: service.needsSetup(),
+        builder: (context, snapshot) {
+          if (snapshot.data == true) {
+            return SetupScreen(
+              service: service,
+              onComplete: () async {
+                await service.start();
+                widget.tab.startListening();
+                setState(() {});
+              },
+            );
+          }
+          return _terminal();
+        },
+      );
+    }
+
+    return _terminal();
   }
+
+  Widget _terminal() => TerminalWidget(
+    key: widget.terminalKey,
+    onReady: () {
+      for (final chunk in widget.tab.scrollbackBuffer) {
+        widget.terminalKey.currentState?.write(chunk);
+      }
+      widget.tab.output.listen((data) {
+        widget.terminalKey.currentState?.write(data);
+      });
+    },
+    onInput: widget.tab.sendInput,
+    onResize: widget.tab.resize,
+  );
 }
