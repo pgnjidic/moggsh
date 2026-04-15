@@ -39,7 +39,7 @@ class TerminalForegroundService : Service() {
         return Notification.Builder(this, CHANNEL_ID)
             .setContentTitle("mogsh")
             .setContentText("Terminal session active")
-            .setSmallIcon(android.R.drawable.ic_menu_terminal)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .build()
