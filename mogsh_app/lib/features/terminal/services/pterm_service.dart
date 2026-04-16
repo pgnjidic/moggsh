@@ -35,9 +35,12 @@ class PtermService {
     final dir = await _rootfsDir();
     final marker = File('${dir.path}/.setup_complete');
     if (!marker.existsSync()) return true;
-    // Guard against marker existing but rootfs being incomplete/broken
-    final shType = await FileSystemEntity.type('${dir.path}/bin/sh', followLinks: false);
-    return shType == FileSystemEntityType.notFound;
+    // Guard against marker existing but binaries not being executable.
+    // FileStat follows symlinks, so this checks the real busybox binary.
+    final stat = await FileStat.stat('${dir.path}/bin/busybox');
+    if (stat.type == FileSystemEntityType.notFound) return true;
+    // mode & 0x49 = any execute bit (owner|group|other = 0o111)
+    return (stat.mode & 0x49) == 0;
   }
 
   /// First-run setup: download Alpine rootfs with progress callback.
