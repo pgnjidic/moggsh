@@ -34,7 +34,10 @@ class PtermService {
   Future<bool> needsSetup() async {
     final dir = await _rootfsDir();
     final marker = File('${dir.path}/.setup_complete');
-    return !marker.existsSync();
+    if (!marker.existsSync()) return true;
+    // Guard against marker existing but rootfs being incomplete/broken
+    final shType = await FileSystemEntity.type('${dir.path}/bin/sh', followLinks: false);
+    return shType == FileSystemEntityType.notFound;
   }
 
   /// First-run setup: download Alpine rootfs with progress callback.
@@ -172,21 +175,18 @@ class PtermService {
   }
 
   Future<void> _extractTarGz(File tarGz, Directory dest) async {
-    // Pure-Dart extraction via the archive package — no system tar needed on Android.
-    final inputStream = InputFileStream(tarGz.path);
-    final gzip = GZipDecoder().decodeBuffer(inputStream);
-    final tar = TarDecoder();
-    final archive = tar.decodeBytes(gzip);
-    for (final entry in archive) {
-      final outPath = '${dest.path}/${entry.name}';
-      if (entry.isFile) {
-        final outFile = OutputFileStream(outPath);
-        entry.writeContent(outFile);
-        await outFile.close();
-      } else {
-        await Directory(outPath).create(recursive: true);
+    // Pure-Dart extraction — no system tar needed on Android.
+    final bytes = await tarGz.readAsBytes();
+    final archive = TarDecoder().decodeBytes(GZipDecoder().decodeBytes(bytes));
+    await extractArchiveToDisk(archive, dest.path);
+
+    // extractArchiveToDisk does not preserve Unix permissions.
+    // Restore execute bits for standard bin directories using Android's chmod.
+    for (final dir in ['bin', 'sbin', 'usr/bin', 'usr/sbin', 'usr/local/bin', 'usr/local/sbin']) {
+      final fullPath = '${dest.path}/$dir';
+      if (Directory(fullPath).existsSync()) {
+        await Process.run('/system/bin/chmod', ['-R', '755', fullPath]);
       }
     }
-    inputStream.close();
   }
 }
