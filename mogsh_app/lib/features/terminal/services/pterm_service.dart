@@ -63,12 +63,15 @@ class PtermService {
 
     // 2. Extract rootfs
     onProgress('Extracting filesystem...', 0.70);
+    debugPrint('[setup] extracting to ${rootfsDir.path}');
     await _extractTarGz(tarFile, rootfsDir);
     tarFile.deleteSync();
+    debugPrint('[setup] extraction done, listing bin/: ${Directory('${rootfsDir.path}/bin').listSync().map((e) => e.path.split('/').last).take(10).toList()}');
 
     // 3. Mark setup complete
     File('${rootfsDir.path}/.setup_complete').writeAsStringSync('ok');
     onProgress('Done!', 1.0);
+    debugPrint('[setup] complete');
   }
 
   /// Start a proot shell session
@@ -85,6 +88,11 @@ class PtermService {
     // Default hardcoded path /data/data/com.termux/... doesn't exist here.
     final prootTmp = Directory('${appDir.path}/proot_tmp');
     prootTmp.createSync(recursive: true);
+
+    debugPrint('[pterm] prootPath=$prootPath exists=${File(prootPath).existsSync()}');
+    debugPrint('[pterm] rootfsPath=$rootfsPath');
+    debugPrint('[pterm] prootTmp=${prootTmp.path}');
+    debugPrint('[pterm] /bin/sh exists=${File('$rootfsPath/bin/sh').existsSync()} | link=${Link('$rootfsPath/bin/sh').existsSync()}');
 
     _pty = Pty.start(
       prootPath,
@@ -118,9 +126,13 @@ class PtermService {
         .cast<List<int>>()
         .transform(const Utf8Decoder(allowMalformed: true) as StreamTransformer<List<int>, String>)
         .listen(
-          (data) => _outputController.add(data),
+          (data) {
+            debugPrint('[proot] $data');
+            _outputController.add(data);
+          },
           onDone: () {
             _running = false;
+            debugPrint('[proot] session ended');
             _crashController.add(null);
           },
         );
