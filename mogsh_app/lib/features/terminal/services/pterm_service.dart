@@ -100,27 +100,14 @@ class PtermService {
     );
 
     _running = true;
-    bool foregroundStarted = false;
 
     _pty!.output
         .cast<List<int>>()
         .transform(const Utf8Decoder(allowMalformed: true) as StreamTransformer<List<int>, String>)
         .listen(
-          (data) {
-            // Start foreground service only once we have actual output —
-            // avoids the race where proot dies instantly and stopService()
-            // races against startForeground() causing a fatal RemoteServiceException.
-            if (!foregroundStarted && Platform.isAndroid) {
-              foregroundStarted = true;
-              _platform.invokeMethod('startForeground').catchError((_) {});
-            }
-            _outputController.add(data);
-          },
+          (data) => _outputController.add(data),
           onDone: () {
             _running = false;
-            if (foregroundStarted && Platform.isAndroid) {
-              _platform.invokeMethod('stopForeground').catchError((_) {});
-            }
             _crashController.add(null);
           },
         );
