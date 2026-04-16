@@ -65,9 +65,9 @@ class PtermService {
     // 2. Extract rootfs
     onProgress('Extracting filesystem...', 0.70);
     debugPrint('[setup] extracting to ${rootfsDir.path}');
-    await _extractTarGz(tarFile, rootfsDir);
+    await _extractTarGz(tarFile, rootfsDir, debug: true);
     tarFile.deleteSync();
-    debugPrint('[setup] extraction done, listing bin/: ${Directory('${rootfsDir.path}/bin').listSync().map((e) => e.path.split('/').last).take(10).toList()}');
+    debugPrint('[setup] extraction done, listing bin/: ${Directory('${rootfsDir.path}/bin').listSync().map((e) => e.path.split('/').last).take(20).toList()}');
 
     // 3. Mark setup complete
     File('${rootfsDir.path}/.setup_complete').writeAsStringSync('ok');
@@ -197,10 +197,18 @@ class PtermService {
     }
   }
 
-  Future<void> _extractTarGz(File tarGz, Directory dest) async {
+  Future<void> _extractTarGz(File tarGz, Directory dest, {bool debug = false}) async {
     // Pure-Dart extraction — no system tar needed on Android.
     final bytes = await tarGz.readAsBytes();
     final archive = TarDecoder().decodeBytes(GZipDecoder().decodeBytes(bytes));
+
+    if (debug) {
+      // Log first 30 entries to see what the archive contains
+      for (final f in archive.files.take(30)) {
+        debugPrint('[tar] ${f.name} file=${f.isFile} sym=${f.isSymbolicLink} target=${f.isSymbolicLink ? f.nameOfLinkedFile : "-"} mode=${f.mode.toRadixString(8)}');
+      }
+    }
+
     await extractArchiveToDisk(archive, dest.path);
 
     // extractArchiveToDisk does not preserve Unix permissions.
