@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:archive/archive_io.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_pty/flutter_pty.dart';
 import 'package:http/http.dart' as http;
@@ -91,6 +92,8 @@ class PtermService {
         'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
         'SHELL': '/bin/sh',
         'LANG': 'en_US.UTF-8',
+        // Needed so Android linker can find libtalloc.so alongside libproot.so
+        if (nativeLibDir case final String dir) 'LD_LIBRARY_PATH': dir,
       },
       columns: 80,
       rows: 24,
@@ -177,14 +180,21 @@ class PtermService {
   }
 
   Future<void> _extractTarGz(File tarGz, Directory dest) async {
-    // Use system tar for large archives (more efficient than pure-Dart)
-    final result = await Process.run('tar', [
-      'xzf', tarGz.path,
-      '-C', dest.path,
-      '--no-same-owner',
-    ]);
-    if (result.exitCode != 0) {
-      throw Exception('tar extraction failed: ${result.stderr}');
+    // Pure-Dart extraction via the archive package — no system tar needed on Android.
+    final inputStream = InputFileStream(tarGz.path);
+    final gzip = GZipDecoder().decodeBuffer(inputStream);
+    final tar = TarDecoder();
+    final archive = tar.decodeBytes(gzip);
+    for (final entry in archive) {
+      final outPath = '${dest.path}/${entry.name}';
+      if (entry.isFile) {
+        final outFile = OutputFileStream(outPath);
+        entry.writeContent(outFile);
+        await outFile.close();
+      } else {
+        await Directory(outPath).create(recursive: true);
+      }
     }
+    inputStream.close();
   }
 }
