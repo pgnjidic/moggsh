@@ -81,6 +81,11 @@ class PtermService {
     final prootPath = '$nativeLibDir/libproot.so';
     final rootfsPath = '${appDir.path}/rootfs';
 
+    // proot (Termux build) needs a writable tmp dir for its internal glue rootfs.
+    // Default hardcoded path /data/data/com.termux/... doesn't exist here.
+    final prootTmp = Directory('${appDir.path}/proot_tmp');
+    prootTmp.createSync(recursive: true);
+
     _pty = Pty.start(
       prootPath,
       arguments: [
@@ -98,6 +103,8 @@ class PtermService {
         'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
         'SHELL': '/bin/sh',
         'LANG': 'en_US.UTF-8',
+        // Redirect proot's internal tmp away from the hardcoded Termux path
+        'PROOT_TMP_DIR': prootTmp.path,
         // Needed so Android linker can find libtalloc.so alongside libproot.so
         if (nativeLibDir case final String dir) 'LD_LIBRARY_PATH': dir,
       },
