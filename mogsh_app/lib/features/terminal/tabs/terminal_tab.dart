@@ -13,7 +13,10 @@ class TerminalTab {
   static const int maxScrollback = 5000;
 
   final _outputController = StreamController<String>.broadcast();
-  Stream<String> get output => _outputController.stream;
+  final _closedController = StreamController<void>.broadcast();
+
+  Stream<String> get output  => _outputController.stream;
+  Stream<void>   get onClose => _closedController.stream;
 
   StreamSubscription<String>? _outputSub;
   StreamSubscription<SshConnectionState>? _stateSub;
@@ -43,17 +46,34 @@ class TerminalTab {
         case SshConnectionState.error:
           sessionState = SessionState.offline;
           _outputController.add('\r\n\x1b[31m[disconnected]\x1b[0m\r\n');
+          // Auto-close tab after brief delay so user sees the message
+          Future.delayed(const Duration(milliseconds: 1200), () {
+            if (!_closedController.isClosed) _closedController.add(null);
+          });
       }
     });
   }
 
-  void sendInput(String data) => session.write(data);
+  void sendInput(String data) {
+    // Detect exit — disable auto-reconnect before sending
+    final trimmed = data.trim();
+    if (trimmed == 'exit' || trimmed == 'logout') {
+      session.disableReconnect();
+    }
+    session.write(data);
+  }
+
   void resize(int cols, int rows) => session.resize(cols, rows);
+
+  void disconnect() {
+    session.disconnect();
+  }
 
   void dispose() {
     _outputSub?.cancel();
     _stateSub?.cancel();
     _outputController.close();
+    _closedController.close();
     session.dispose();
   }
 }

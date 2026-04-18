@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../../ssh/services/ssh_session.dart';
@@ -5,6 +6,7 @@ import 'terminal_tab.dart';
 
 class TabManager extends ChangeNotifier {
   final _tabs = <TerminalTab>[];
+  final _closeSubs = <String, StreamSubscription<void>>{};
   int _activeIndex = 0;
 
   List<TerminalTab> get tabs => List.unmodifiable(_tabs);
@@ -29,6 +31,9 @@ class TabManager extends ChangeNotifier {
     _activeIndex = _tabs.length - 1;
     tab.startListening();
 
+    // Auto-close tab when session disconnects
+    _closeSubs[tab.id] = tab.onClose.listen((_) => closeTab(tab.id));
+
     notifyListeners();
     return tab;
   }
@@ -49,26 +54,19 @@ class TabManager extends ChangeNotifier {
   }
 
   void closeTab(String id) {
-    if (_tabs.length <= 1) {
-      final idx = _tabs.indexWhere((t) => t.id == id);
-      if (idx >= 0) {
-        _tabs[idx].dispose();
-        _tabs.removeAt(idx);
-        _activeIndex = 0;
-        notifyListeners();
-      }
-      return;
-    }
     final idx = _tabs.indexWhere((t) => t.id == id);
     if (idx < 0) return;
+    _closeSubs.remove(id)?.cancel();
+    _tabs[idx].disconnect();
     _tabs[idx].dispose();
     _tabs.removeAt(idx);
-    if (_activeIndex >= _tabs.length) _activeIndex = _tabs.length - 1;
+    if (_activeIndex >= _tabs.length) _activeIndex = (_tabs.length - 1).clamp(0, double.maxFinite.toInt());
     notifyListeners();
   }
 
   @override
   void dispose() {
+    for (final sub in _closeSubs.values) { sub.cancel(); }
     for (final tab in _tabs) { tab.dispose(); }
     super.dispose();
   }

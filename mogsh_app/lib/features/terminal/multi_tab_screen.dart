@@ -74,21 +74,13 @@ class _MultiTabScreenState extends State<MultiTabScreen> {
                   onAddTab: null,
                 ),
                 Expanded(
-                  child: GestureDetector(
-                    onVerticalDragEnd: (details) {
-                      if (details.primaryVelocity != null && details.primaryVelocity! < -300) {
-                        final tab = mgr.activeTab;
-                        if (tab != null) _keyFor(tab.id).currentState?.write('\x1b[A');
-                      }
-                    },
-                    child: PageView.builder(
-                      controller: _pageController,
-                      itemCount: tabs.length,
-                      onPageChanged: (i) => mgr.switchTo(i),
-                      itemBuilder: (_, i) => _TabPage(
-                        tab: tabs[i],
-                        terminalKey: _keyFor(tabs[i].id),
-                      ),
+                  child: PageView.builder(
+                    controller: _pageController,
+                    itemCount: tabs.length,
+                    onPageChanged: (i) => mgr.switchTo(i),
+                    itemBuilder: (_, i) => _TabPage(
+                      tab: tabs[i],
+                      terminalKey: _keyFor(tabs[i].id),
                     ),
                   ),
                 ),

@@ -121,6 +121,8 @@ class SshSession {
 
   void attachTmux(String session) => write('tmux attach -t $session\r');
 
+  void disableReconnect() => _autoReconnect = false;
+
   void disconnect() {
     _autoReconnect = false;
     _client?.close();
