@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'core/theme/app_colors.dart';
 import 'features/settings/settings_page.dart';
 import 'features/settings/settings_service.dart';
 import 'features/ssh/server_list_page.dart';
@@ -32,56 +33,61 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void switchToTerminal() => setState(() => _tab = 0);
 
-  static const _bg      = Color(0xFF0A0A0F);
-  static const _surface = Color(0xFF12121A);
-  static const _green   = Color(0xFF00FF88);
-  static const _cyan    = Color(0xFF00D4FF);
-  static const _muted   = Color(0xFF444466);
-  static const _border  = Color(0xFF1E1E2E);
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: AppColors.bg,
       body: ChangeNotifierProvider.value(
         value: _tabManager,
         child: IndexedStack(
-        index: _tab,
-        children: [
-          const MultiTabScreen(),
-          ServerListPage(tabManager: _tabManager, onConnected: switchToTerminal),
-          const _KeysPage(),
-          ChangeNotifierProvider(
-            create: (_) => SettingsService()..init(),
-            child: Consumer<SettingsService>(
-              builder: (_, svc, _) => SettingsPage(service: svc),
+          index: _tab,
+          children: [
+            const MultiTabScreen(),
+            ServerListPage(tabManager: _tabManager, onConnected: switchToTerminal),
+            const _KeysPage(),
+            ChangeNotifierProvider(
+              create: (_) => SettingsService()..init(),
+              child: Consumer<SettingsService>(
+                builder: (_, svc, _) => SettingsPage(service: svc),
+              ),
             ),
-          ),
-        ],
+          ],
         ),
       ),
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: _surface,
-          border: Border(top: BorderSide(color: _border, width: 1)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: SizedBox(
-            height: 56,
-            child: Row(
-              children: [
-                _NavItem(icon: Icons.terminal, label: 'Terminal', active: _tab == 0,
-                    color: _green, onTap: () => setState(() => _tab = 0)),
-                _NavItem(icon: Icons.dns_outlined, label: 'Hosts', active: _tab == 1,
-                    color: _cyan, onTap: () => setState(() => _tab = 1)),
-                _NavItem(icon: Icons.vpn_key_outlined, label: 'Keys', active: _tab == 2,
-                    color: _cyan, onTap: () => setState(() => _tab = 2)),
-                _NavItem(icon: Icons.tune, label: 'Settings', active: _tab == 3,
-                    color: _muted, onTap: () => setState(() => _tab = 3)),
-              ],
-            ),
-          ),
+      bottomNavigationBar: _BottomNav(
+        current: _tab,
+        onTap: (i) => setState(() => _tab = i),
+      ),
+    );
+  }
+}
+
+class _BottomNav extends StatelessWidget {
+  final int current;
+  final ValueChanged<int> onTap;
+  const _BottomNav({required this.current, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.bgDark,
+        border: Border(top: BorderSide(color: AppColors.border, width: 0.5)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 54,
+          child: Row(children: [
+            _NavItem(icon: Icons.terminal, label: 'Terminal', active: current == 0,
+                activeColor: AppColors.teal, onTap: () => onTap(0)),
+            _NavItem(icon: Icons.dns_outlined, label: 'Hosts', active: current == 1,
+                activeColor: AppColors.blue, onTap: () => onTap(1)),
+            _NavItem(icon: Icons.vpn_key_outlined, label: 'Keys', active: current == 2,
+                activeColor: AppColors.blue, onTap: () => onTap(2)),
+            _NavItem(icon: Icons.tune, label: 'Settings', active: current == 3,
+                activeColor: AppColors.textMuted, onTap: () => onTap(3)),
+          ]),
         ),
       ),
     );
@@ -92,35 +98,30 @@ class _NavItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool active;
-  final Color color;
+  final Color activeColor;
   final VoidCallback onTap;
 
-  const _NavItem({
-    required this.icon, required this.label, required this.active,
-    required this.color, required this.onTap,
-  });
+  const _NavItem({required this.icon, required this.label, required this.active,
+      required this.activeColor, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final c = active ? color : const Color(0xFF444466);
+    final color = active ? activeColor : AppColors.textMuted.withValues(alpha: 0.5);
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: c, size: 20),
-            const SizedBox(height: 3),
-            Text(label, style: TextStyle(color: c, fontSize: 10, fontFamily: 'monospace')),
-          ],
-        ),
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Icon(icon, color: color, size: 19),
+          const SizedBox(height: 3),
+          Text(label, style: TextStyle(color: color, fontSize: 9, fontFamily: 'monospace')),
+        ]),
       ),
     );
   }
 }
 
-// ─── SSH Keys page ──────────────────────────────────────────────────────────
+// ── SSH Keys page ─────────────────────────────────────────────────────────
 
 class _KeysPage extends StatefulWidget {
   const _KeysPage();
@@ -131,14 +132,6 @@ class _KeysPage extends StatefulWidget {
 
 class _KeysPageState extends State<_KeysPage> {
   List<SshKeyEntry> _keys = [];
-
-  static const _bg     = Color(0xFF0A0A0F);
-  static const _green  = Color(0xFF00FF88);
-  static const _cyan   = Color(0xFF00D4FF);
-  static const _muted  = Color(0xFF666688);
-  static const _surface= Color(0xFF12121A);
-  static const _border = Color(0xFF1E1E2E);
-  static const _red    = Color(0xFFFF5555);
 
   @override
   void initState() { super.initState(); _load(); }
@@ -151,94 +144,89 @@ class _KeysPageState extends State<_KeysPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: AppColors.bg,
       body: SafeArea(
         child: Column(children: [
-          // Header
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Row(children: [
-              const Text('SSH Keys',
-                  style: TextStyle(color: _green, fontSize: 18,
-                      fontFamily: 'monospace', letterSpacing: 1)),
+              const Text('Keys', style: TextStyle(color: AppColors.textPrimary,
+                  fontSize: 17, fontWeight: FontWeight.w600, letterSpacing: 0.3)),
               const Spacer(),
               GestureDetector(
                 onTap: _showImportSheet,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                   decoration: BoxDecoration(
-                    border: Border.all(color: _cyan),
-                    borderRadius: BorderRadius.circular(4),
+                    color: AppColors.blue.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.blue.withValues(alpha: 0.35)),
                   ),
                   child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(Icons.add, color: _cyan, size: 14),
+                    Icon(Icons.add, color: AppColors.teal, size: 13),
                     SizedBox(width: 4),
-                    Text('Import', style: TextStyle(color: _cyan,
+                    Text('Import', style: TextStyle(color: AppColors.teal,
                         fontSize: 12, fontFamily: 'monospace')),
                   ]),
                 ),
               ),
             ]),
           ),
-
           if (_keys.isEmpty)
-            Expanded(
-              child: Center(
-                child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  const Icon(Icons.vpn_key_outlined, color: _muted, size: 48),
-                  const SizedBox(height: 16),
-                  const Text('No SSH keys yet',
-                      style: TextStyle(color: _muted, fontFamily: 'monospace', fontSize: 14)),
-                  const SizedBox(height: 8),
-                  const Text('Import a PEM private key to connect\nto servers without a password',
-                      style: TextStyle(color: Color(0xFF444466), fontSize: 12, height: 1.6),
-                      textAlign: TextAlign.center),
-                ]),
-              ),
-            )
+            Expanded(child: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Icon(Icons.vpn_key_outlined, color: AppColors.textMuted.withValues(alpha: 0.4), size: 48),
+              const SizedBox(height: 16),
+              const Text('No SSH keys yet',
+                  style: TextStyle(color: AppColors.textMuted, fontFamily: 'monospace', fontSize: 13)),
+              const SizedBox(height: 6),
+              const Text('Import a PEM private key',
+                  style: TextStyle(color: AppColors.textMuted, fontFamily: 'monospace', fontSize: 11)),
+            ])))
           else
             Expanded(
               child: ListView.builder(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 itemCount: _keys.length,
                 itemBuilder: (_, i) {
                   final key = _keys[i];
                   return Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     decoration: BoxDecoration(
-                      color: _surface,
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: _border),
+                      color: AppColors.surface2.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
                     ),
                     child: Row(children: [
-                      const Icon(Icons.vpn_key, color: _cyan, size: 18),
-                      const SizedBox(width: 10),
-                      Expanded(child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(key.label, style: const TextStyle(
-                              color: Colors.white, fontFamily: 'monospace', fontSize: 13)),
-                          const SizedBox(height: 2),
-                          Text(
-                            key.publicKey.length > 40
-                                ? '${key.publicKey.substring(0, 40)}…'
-                                : key.publicKey,
-                            style: const TextStyle(color: _muted,
-                                fontFamily: 'monospace', fontSize: 10),
-                          ),
-                        ],
-                      )),
-                      IconButton(
-                        icon: const Icon(Icons.edit_outlined, color: _muted, size: 18),
-                        onPressed: () => _showRenameDialog(key),
+                      Container(
+                        width: 32, height: 32,
+                        decoration: BoxDecoration(
+                          color: AppColors.amber.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.vpn_key_outlined, color: AppColors.amber, size: 15),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.delete_outline, color: _red, size: 18),
-                        onPressed: () async {
-                          await SshKeyManager.delete(key.id);
-                          _load();
-                        },
+                      const SizedBox(width: 10),
+                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text(key.label, style: const TextStyle(
+                            color: AppColors.textPrimary, fontFamily: 'monospace', fontSize: 12,
+                            fontWeight: FontWeight.w500)),
+                        const SizedBox(height: 2),
+                        Text(
+                          key.publicKey.length > 36
+                              ? '${key.publicKey.substring(0, 36)}…'
+                              : key.publicKey,
+                          style: const TextStyle(color: AppColors.textMuted,
+                              fontFamily: 'monospace', fontSize: 9),
+                        ),
+                      ])),
+                      GestureDetector(onTap: () => _showRenameDialog(key),
+                          child: const Padding(padding: EdgeInsets.all(6),
+                              child: Icon(Icons.edit_outlined, color: AppColors.textMuted, size: 15))),
+                      GestureDetector(
+                        onTap: () async { await SshKeyManager.delete(key.id); _load(); },
+                        child: const Padding(padding: EdgeInsets.all(6),
+                            child: Icon(Icons.delete_outline, color: AppColors.red, size: 15)),
                       ),
                     ]),
                   );
@@ -255,23 +243,20 @@ class _KeysPageState extends State<_KeysPage> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: _surface,
+        backgroundColor: AppColors.surface,
         title: const Text('Rename key',
-            style: TextStyle(color: _green, fontFamily: 'monospace', fontSize: 14)),
+            style: TextStyle(color: AppColors.green, fontFamily: 'monospace', fontSize: 14)),
         content: TextField(
-          controller: ctrl,
-          autofocus: true,
-          style: const TextStyle(color: Colors.white, fontFamily: 'monospace', fontSize: 13),
+          controller: ctrl, autofocus: true,
+          style: const TextStyle(color: AppColors.textPrimary, fontFamily: 'monospace', fontSize: 13),
           decoration: const InputDecoration(
-            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: _border)),
-            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: _green)),
+            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.border)),
+            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.green)),
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: _muted)),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted))),
           TextButton(
             onPressed: () async {
               final label = ctrl.text.trim();
@@ -280,7 +265,7 @@ class _KeysPageState extends State<_KeysPage> {
                 if (mounted) { Navigator.pop(context); _load(); }
               }
             },
-            child: const Text('Save', style: TextStyle(color: _green)),
+            child: const Text('Save', style: TextStyle(color: AppColors.green)),
           ),
         ],
       ),
@@ -288,44 +273,40 @@ class _KeysPageState extends State<_KeysPage> {
   }
 
   void _showImportSheet() {
-    final pemCtrl = TextEditingController();
+    final pemCtrl   = TextEditingController();
     final labelCtrl = TextEditingController();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: _surface,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (_) => Padding(
         padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-            top: 20, left: 16, right: 16),
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16, top: 20, left: 16, right: 16),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           const Text('Import SSH Key',
-              style: TextStyle(color: _green, fontSize: 16, fontFamily: 'monospace')),
+              style: TextStyle(color: AppColors.green, fontSize: 15, fontFamily: 'monospace')),
           const SizedBox(height: 16),
           TextField(
             controller: labelCtrl,
-            style: const TextStyle(color: Colors.white, fontFamily: 'monospace', fontSize: 13),
+            style: const TextStyle(color: AppColors.textPrimary, fontFamily: 'monospace', fontSize: 13),
             decoration: const InputDecoration(
               hintText: 'Label (e.g. my-laptop)',
-              hintStyle: TextStyle(color: _muted, fontSize: 13),
-              enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: _border)),
-              focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: _green)),
-              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 12),
+              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.border)),
+              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.green)),
             ),
           ),
           const SizedBox(height: 10),
           TextField(
-            controller: pemCtrl,
-            maxLines: 6,
-            style: const TextStyle(color: Colors.white, fontFamily: 'monospace', fontSize: 11),
+            controller: pemCtrl, maxLines: 6,
+            style: const TextStyle(color: AppColors.textPrimary, fontFamily: 'monospace', fontSize: 11),
             decoration: const InputDecoration(
               hintText: '-----BEGIN OPENSSH PRIVATE KEY-----\n...',
-              hintStyle: TextStyle(color: _muted, fontSize: 11),
-              enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: _border)),
-              focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: _green)),
-              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 11),
+              enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: AppColors.border)),
+              focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: AppColors.green)),
+              contentPadding: EdgeInsets.all(10),
             ),
           ),
           const SizedBox(height: 12),
@@ -333,27 +314,25 @@ class _KeysPageState extends State<_KeysPage> {
             width: double.infinity,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: _green,
-                foregroundColor: _bg,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                backgroundColor: AppColors.green, foregroundColor: AppColors.bg,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
               ),
               onPressed: () async {
                 try {
-                  await SshKeyManager.importPem(
-                      pemCtrl.text.trim(), labelCtrl.text.trim());
+                  await SshKeyManager.importPem(pemCtrl.text.trim(), labelCtrl.text.trim());
                   if (!mounted) return;
                   Navigator.pop(context);
                   _load();
                 } catch (e) {
                   if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text('Error: $e',
-                        style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
-                    backgroundColor: _red,
+                    content: Text('Error: $e', style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
+                    backgroundColor: AppColors.red,
                   ));
                 }
               },
-              child: const Text('Import', style: TextStyle(fontFamily: 'monospace')),
+              child: const Text('Import', style: TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.w600)),
             ),
           ),
         ]),
