@@ -123,8 +123,17 @@
       }
     }, { passive: true });
 
-    // Resize observer
-    new ResizeObserver(() => fitAddon.fit()).observe(document.getElementById('terminal'));
+    // Flutter → JS: full fit + repaint + focus. Needed when WebView becomes
+    // visible after being laid out at 0×0 — xterm caches the zero geometry
+    // and fit alone does not force a redraw of the internal framebuffer.
+    window.termFit = () => {
+      try { fitAddon.fit(); } catch (_) {}
+      term.refresh(0, Math.max(term.rows - 1, 0));
+      term.focus();
+    };
+
+    // Resize observer — use full termFit so size-from-zero transitions repaint
+    new ResizeObserver(() => window.termFit()).observe(document.getElementById('terminal'));
 
     // Flutter → JS: write data to terminal
     window.termWrite = (data) => term.write(data);

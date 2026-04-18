@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../settings/settings_service.dart';
+import '../ssh/services/ssh_session.dart';
 import 'tabs/tab_manager.dart';
 import 'tabs/terminal_tab.dart';
 import 'terminal_widget.dart';
@@ -139,7 +140,11 @@ class _TabPage extends StatefulWidget {
 
 class _TabPageState extends State<_TabPage> with AutomaticKeepAliveClientMixin {
   StreamSubscription<String>? _outputSub;
+  StreamSubscription<SshConnectionState>? _stateSub;
   SettingsService? _settings;
+  TabManager? _tabMgr;
+  bool _wasActive = false;
+  bool _sawConnected = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -153,6 +158,13 @@ class _TabPageState extends State<_TabPage> with AutomaticKeepAliveClientMixin {
       _settings = settings;
       _settings!.addListener(_onSettingsChanged);
     }
+    final mgr = Provider.of<TabManager>(context, listen: false);
+    if (_tabMgr != mgr) {
+      _tabMgr?.removeListener(_onTabManagerChanged);
+      _tabMgr = mgr;
+      _tabMgr!.addListener(_onTabManagerChanged);
+      _wasActive = _tabMgr!.activeTab?.id == widget.tab.id;
+    }
   }
 
   void _onSettingsChanged() {
@@ -161,10 +173,26 @@ class _TabPageState extends State<_TabPage> with AutomaticKeepAliveClientMixin {
     );
   }
 
+  void _onTabManagerChanged() {
+    final isActive = _tabMgr?.activeTab?.id == widget.tab.id;
+    if (isActive && !_wasActive) {
+      // Tab transitioned from inactive → active. WebView may have been
+      // laid out at 0×0 while hidden; force fit+refresh so xterm repaints.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        widget.terminalKey.currentState?.fit();
+        Future.delayed(const Duration(milliseconds: 200),
+            () => widget.terminalKey.currentState?.fit());
+      });
+    }
+    _wasActive = isActive;
+  }
+
   @override
   void dispose() {
     _settings?.removeListener(_onSettingsChanged);
+    _tabMgr?.removeListener(_onTabManagerChanged);
     _outputSub?.cancel();
+    _stateSub?.cancel();
     super.dispose();
   }
 
@@ -191,6 +219,21 @@ class _TabPageState extends State<_TabPage> with AutomaticKeepAliveClientMixin {
         // xterm.js never paints the initial content without this nudge.
         Future.delayed(const Duration(milliseconds: 50), () {
           widget.terminalKey.currentState?.refresh();
+        });
+        // Extra fit after layout settles — catches WebViews pre-built offscreen.
+        Future.delayed(const Duration(milliseconds: 300), () {
+          widget.terminalKey.currentState?.fit();
+        });
+
+        // Fit right when session transitions to connected — MOTD starts streaming.
+        _stateSub?.cancel();
+        _stateSub = widget.tab.session.stateChanges.listen((s) {
+          if (s == SshConnectionState.connected && !_sawConnected) {
+            _sawConnected = true;
+            Future.delayed(const Duration(milliseconds: 100), () {
+              widget.terminalKey.currentState?.fit();
+            });
+          }
         });
       },
       onInput: widget.tab.sendInput,

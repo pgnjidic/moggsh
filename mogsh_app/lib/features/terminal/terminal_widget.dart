@@ -96,6 +96,11 @@ class TerminalWidgetState extends State<TerminalWidget> {
     _controller.runJavaScript('termRefresh()');
   }
 
+  void fit() {
+    if (!_ready) return;
+    _controller.runJavaScript('termFit()');
+  }
+
   void search(String query) {
     if (!_ready) return;
     _controller.runJavaScript('termSearch(${jsonEncode(query)})');
