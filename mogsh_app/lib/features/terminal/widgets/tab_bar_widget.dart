@@ -10,6 +10,8 @@ class MogshTabBar extends StatelessWidget {
   final ValueChanged<String> onClose;
   final ValueChanged<String> onRename;
   final VoidCallback? onAddTab;
+  final bool compact;
+  final Widget? trailing;
 
   const MogshTabBar({
     super.key,
@@ -19,6 +21,8 @@ class MogshTabBar extends StatelessWidget {
     required this.onClose,
     required this.onRename,
     this.onAddTab,
+    this.compact = false,
+    this.trailing,
   });
 
   Color _dotColor(SessionState state) => switch (state) {
@@ -30,8 +34,10 @@ class MogshTabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final h = compact ? 34.0 : 46.0;
+    final vPad = compact ? 4.0 : 7.0;
     return Container(
-      height: 46,
+      height: h,
       decoration: const BoxDecoration(
         color: AppColors.bgDark,
         border: Border(bottom: BorderSide(color: AppColors.border, width: 0.5)),
@@ -40,18 +46,20 @@ class MogshTabBar extends StatelessWidget {
         Expanded(
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+            padding: EdgeInsets.symmetric(horizontal: 8, vertical: vPad),
             itemCount: tabs.length,
             itemBuilder: (_, i) => _TabPill(
               tab: tabs[i],
               isActive: i == activeIndex,
               dotColor: _dotColor(tabs[i].sessionState),
+              compact: compact,
               onTap: () { HapticFeedback.selectionClick(); onSwitch(i); },
               onLongPress: () => _showRenameDialog(context, tabs[i]),
               onClose: () => onClose(tabs[i].id),
             ),
           ),
         ),
+        ?trailing,
       ]),
     );
   }
@@ -89,62 +97,101 @@ class MogshTabBar extends StatelessWidget {
   }
 }
 
-class _TabPill extends StatelessWidget {
+class _TabPill extends StatefulWidget {
   final TerminalTab tab;
   final bool isActive;
   final Color dotColor;
+  final bool compact;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
   final VoidCallback onClose;
 
   const _TabPill({
     required this.tab, required this.isActive, required this.dotColor,
+    required this.compact,
     required this.onTap, required this.onLongPress, required this.onClose,
   });
 
   @override
+  State<_TabPill> createState() => _TabPillState();
+}
+
+class _TabPillState extends State<_TabPill> with SingleTickerProviderStateMixin {
+  late final AnimationController _pulseCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _pulseCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final connecting = widget.tab.sessionState == SessionState.connecting;
+    final hPad = widget.compact ? 10.0 : 12.0;
+    final vPad = widget.compact ? 3.0 : 5.0;
+    final fontSize = widget.compact ? 11.0 : 12.0;
+    final dotSize = widget.compact ? 7.0 : 6.0;
+
     return GestureDetector(
-      onTap: onTap,
-      onLongPress: onLongPress,
+      onTap: widget.onTap,
+      onLongPress: widget.onLongPress,
       child: Container(
-        constraints: const BoxConstraints(minWidth: 90, maxWidth: 180),
+        constraints: BoxConstraints(minWidth: widget.compact ? 80 : 90, maxWidth: 180),
         margin: const EdgeInsets.only(right: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        padding: EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
         decoration: BoxDecoration(
-          color: isActive
+          color: widget.isActive
               ? AppColors.green.withValues(alpha: 0.14)
               : AppColors.surface2.withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isActive
+            color: widget.isActive
                 ? AppColors.green.withValues(alpha: 0.45)
                 : AppColors.border.withValues(alpha: 0.4),
           ),
-          boxShadow: isActive ? [
+          boxShadow: widget.isActive ? [
             BoxShadow(color: AppColors.green.withValues(alpha: 0.12), blurRadius: 10),
           ] : null,
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Container(
-            width: 6, height: 6,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: dotColor,
-              boxShadow: isActive
-                  ? [BoxShadow(color: dotColor.withValues(alpha: 0.8), blurRadius: 6)]
-                  : null,
-            ),
+          AnimatedBuilder(
+            animation: _pulseCtrl,
+            builder: (_, _) {
+              final pulseOpacity = connecting ? (0.4 + _pulseCtrl.value * 0.6) : 1.0;
+              final blurAmount = connecting
+                  ? (6.0 + _pulseCtrl.value * 6.0)
+                  : (widget.isActive ? 6.0 : 0.0);
+              return Container(
+                width: dotSize, height: dotSize,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: widget.dotColor.withValues(alpha: pulseOpacity),
+                  boxShadow: (widget.isActive || connecting)
+                      ? [BoxShadow(color: widget.dotColor.withValues(alpha: 0.8), blurRadius: blurAmount)]
+                      : null,
+                ),
+              );
+            },
           ),
           const SizedBox(width: 7),
           Flexible(
-            child: Text(tab.title,
+            child: Text(widget.tab.title,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: isActive ? AppColors.teal : AppColors.textMuted,
-                fontSize: 12,
+                color: widget.isActive ? AppColors.teal : AppColors.textMuted,
+                fontSize: fontSize,
                 fontFamily: 'monospace',
-                fontWeight: isActive ? FontWeight.w500 : FontWeight.normal,
+                fontWeight: widget.isActive ? FontWeight.w500 : FontWeight.normal,
               ),
             ),
           ),
@@ -152,22 +199,22 @@ class _TabPill extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
             decoration: BoxDecoration(
-              color: (isActive ? AppColors.green : AppColors.textMuted).withValues(alpha: 0.2),
+              color: (widget.isActive ? AppColors.green : AppColors.textMuted).withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(3),
             ),
             child: Text('CC', style: TextStyle(
-              color: isActive ? AppColors.green : AppColors.textMuted,
+              color: widget.isActive ? AppColors.green : AppColors.textMuted,
               fontSize: 8, fontFamily: 'monospace', fontWeight: FontWeight.w600, letterSpacing: 0.3,
             )),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 4),
           GestureDetector(
-            onTap: onClose,
+            onTap: widget.onClose,
             behavior: HitTestBehavior.opaque,
             child: Padding(
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(6),
               child: Icon(Icons.close, size: 12,
-                  color: isActive ? AppColors.teal.withValues(alpha: 0.7) : AppColors.textMuted.withValues(alpha: 0.5)),
+                  color: widget.isActive ? AppColors.teal.withValues(alpha: 0.7) : AppColors.textMuted.withValues(alpha: 0.5)),
             ),
           ),
         ]),

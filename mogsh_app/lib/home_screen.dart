@@ -38,6 +38,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final landscape = MediaQuery.of(context).orientation == Orientation.landscape;
+    final hideBottomNav = landscape && _tab == 0;
+
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: MultiProvider(
@@ -45,19 +48,31 @@ class _HomeScreenState extends State<HomeScreen> {
           ChangeNotifierProvider.value(value: _tabManager),
           ChangeNotifierProvider.value(value: _settings),
         ],
-        child: IndexedStack(
-          index: _tab,
-          children: [
-            const MultiTabScreen(),
-            ServerListPage(tabManager: _tabManager, onConnected: switchToTerminal),
-            const _KeysPage(),
-            Consumer<SettingsService>(
-              builder: (_, svc, _) => SettingsPage(service: svc),
+        child: Stack(children: [
+          IndexedStack(
+            index: _tab,
+            children: [
+              const MultiTabScreen(),
+              ServerListPage(tabManager: _tabManager, onConnected: switchToTerminal),
+              const _KeysPage(),
+              Consumer<SettingsService>(
+                builder: (_, svc, _) => SettingsPage(service: svc),
+              ),
+            ],
+          ),
+          if (hideBottomNav)
+            Positioned(
+              right: 8, top: 8,
+              child: SafeArea(
+                child: _LandscapeNavFab(
+                  current: _tab,
+                  onSelect: (i) => setState(() => _tab = i),
+                ),
+              ),
             ),
-          ],
-        ),
+        ]),
       ),
-      bottomNavigationBar: _BottomNav(
+      bottomNavigationBar: hideBottomNav ? null : _BottomNav(
         current: _tab,
         onTap: (i) => setState(() => _tab = i),
       ),
@@ -124,6 +139,64 @@ class _NavItem extends StatelessWidget {
             letterSpacing: 0.3,
           )),
         ]),
+      ),
+    );
+  }
+}
+
+// ── Landscape floating nav: single icon that opens a sheet ────────────────
+
+class _LandscapeNavFab extends StatelessWidget {
+  final int current;
+  final ValueChanged<int> onSelect;
+  const _LandscapeNavFab({required this.current, required this.onSelect});
+
+  void _show(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.bgDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
+      ),
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            _sheetItem(context, 1, Icons.dns_rounded, 'Hosts', AppColors.blue),
+            _sheetItem(context, 2, Icons.vpn_key_rounded, 'Keys', AppColors.amber),
+            _sheetItem(context, 3, Icons.tune_rounded, 'Settings', AppColors.green),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  Widget _sheetItem(BuildContext context, int idx, IconData icon, String label, Color color) {
+    final active = idx == current;
+    return ListTile(
+      leading: Icon(icon, color: active ? color : AppColors.textMuted, size: 20),
+      title: Text(label, style: TextStyle(
+        color: active ? color : AppColors.textPrimary,
+        fontFamily: 'monospace', fontSize: 13,
+        fontWeight: active ? FontWeight.w600 : FontWeight.normal,
+      )),
+      onTap: () { Navigator.pop(context); onSelect(idx); },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _show(context),
+      child: Container(
+        width: 36, height: 36,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.surface2.withValues(alpha: 0.9),
+          border: Border.all(color: AppColors.border),
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.4), blurRadius: 8)],
+        ),
+        child: const Icon(Icons.menu_rounded, size: 18, color: AppColors.teal),
       ),
     );
   }

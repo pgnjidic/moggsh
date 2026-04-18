@@ -13,6 +13,8 @@ class ShortcutBar extends StatefulWidget {
   State<ShortcutBar> createState() => _ShortcutBarState();
 }
 
+enum _InputMode { voice, text }
+
 class _ShortcutBarState extends State<ShortcutBar> {
   static const _storage    = FlutterSecureStorage();
   static const _storageKey = 'custom_snippets_v1';
@@ -41,6 +43,9 @@ class _ShortcutBarState extends State<ShortcutBar> {
 
   List<_Key> _snippets = [];
   final _voice = VoiceInputService();
+  _InputMode _mode = _InputMode.voice;
+  final _textCtrl = TextEditingController();
+  final _textFocus = FocusNode();
 
   @override
   void initState() {
@@ -51,6 +56,8 @@ class _ShortcutBarState extends State<ShortcutBar> {
   @override
   void dispose() {
     _voice.dispose();
+    _textCtrl.dispose();
+    _textFocus.dispose();
     super.dispose();
   }
 
@@ -96,8 +103,35 @@ class _ShortcutBarState extends State<ShortcutBar> {
     }
   }
 
+  void _switchMode() {
+    HapticFeedback.selectionClick();
+    setState(() {
+      if (_mode == _InputMode.voice) {
+        if (_voice.state == VoiceState.listening) _voice.stop();
+        _mode = _InputMode.text;
+      } else {
+        _textFocus.unfocus();
+        _mode = _InputMode.voice;
+      }
+    });
+    if (_mode == _InputMode.text) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _textFocus.requestFocus());
+    }
+  }
+
+  void _submitText({bool withReturn = true}) {
+    final text = _textCtrl.text;
+    if (text.isEmpty) return;
+    HapticFeedback.lightImpact();
+    widget.onSend(withReturn ? '$text\r' : text);
+    _textCtrl.clear();
+    // Keep focus so user can chain commands quickly
+    _textFocus.requestFocus();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final landscape = MediaQuery.of(context).orientation == Orientation.landscape;
     return AnimatedBuilder(
       animation: _voice,
       builder: (_, _) {
@@ -107,31 +141,41 @@ class _ShortcutBarState extends State<ShortcutBar> {
             color: AppColors.bgDark,
             border: Border(top: BorderSide(color: AppColors.border, width: 0.5)),
           ),
-          padding: const EdgeInsets.fromLTRB(6, 6, 6, 6),
+          padding: EdgeInsets.fromLTRB(6, landscape ? 4 : 6, 6, landscape ? 4 : 6),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             if (listening || _voice.transcript.isNotEmpty) _voiceTranscriptBar(),
-            // Row 1: ESC + F keys
-            SizedBox(
-              height: 30,
-              child: Row(children: [
-                Expanded(
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: [
-                      ..._row1.map((k) => _KeyBtn(label: k.label, style: _keyStyle(k), onTap: () => _tap(k.data))),
-                      if (_snippets.isNotEmpty)
-                        ..._snippets.map((k) => _KeyBtn(label: k.label, style: _BtnStyle.snippet, onTap: () => _tap(k.data))),
-                    ],
-                  ),
-                ),
-                _IconBtn(icon: Icons.tune, onTap: _showSnippetManager),
-              ]),
+            if (landscape) _landscapeRow(listening) else ..._portraitRows(listening),
+          ]),
+        );
+      },
+    );
+  }
+
+  // ── Portrait: two-row layout ──────────────────────────────────────────────
+  List<Widget> _portraitRows(bool listening) {
+    return [
+      SizedBox(
+        height: 30,
+        child: Row(children: [
+          Expanded(
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                ..._row1.map((k) => _KeyBtn(label: k.label, style: _keyStyle(k), onTap: () => _tap(k.data))),
+                if (_snippets.isNotEmpty)
+                  ..._snippets.map((k) => _KeyBtn(label: k.label, style: _BtnStyle.snippet, onTap: () => _tap(k.data))),
+              ],
             ),
-            const SizedBox(height: 6),
-            // Row 2: left keys + voice + right keys
-            SizedBox(
-              height: 44,
-              child: Row(children: [
+          ),
+          _IconBtn(icon: Icons.tune, onTap: _showSnippetManager),
+        ]),
+      ),
+      const SizedBox(height: 6),
+      SizedBox(
+        height: 44,
+        child: _mode == _InputMode.text
+            ? _textInputRow()
+            : Row(children: [
                 Expanded(
                   child: ListView(
                     scrollDirection: Axis.horizontal,
@@ -146,7 +190,9 @@ class _ShortcutBarState extends State<ShortcutBar> {
                   level: _voice.level,
                   onTap: _toggleVoice,
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 4),
+                _ModeToggle(mode: _mode, onTap: _switchMode),
+                const SizedBox(width: 4),
                 Expanded(
                   child: ListView(
                     scrollDirection: Axis.horizontal,
@@ -155,11 +201,88 @@ class _ShortcutBarState extends State<ShortcutBar> {
                   ),
                 ),
               ]),
-            ),
-          ]),
-        );
-      },
+      ),
+    ];
+  }
+
+  // ── Landscape: single compact row ─────────────────────────────────────────
+  Widget _landscapeRow(bool listening) {
+    if (_mode == _InputMode.text) {
+      return SizedBox(height: 36, child: _textInputRow(compact: true));
+    }
+    final allKeys = <_Key>[..._row1, ..._row2, ..._snippets];
+    return SizedBox(
+      height: 36,
+      child: Row(children: [
+        Expanded(
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: allKeys.length,
+            itemBuilder: (_, i) {
+              final k = allKeys[i];
+              final style = i >= _row1.length + _row2.length
+                  ? _BtnStyle.snippet
+                  : _keyStyle(k);
+              return _KeyBtn(label: k.label, style: style, onTap: () => _tap(k.data));
+            },
+          ),
+        ),
+        const SizedBox(width: 4),
+        _VoiceBtn(
+          listening: listening,
+          error: _voice.state == VoiceState.error,
+          level: _voice.level,
+          onTap: _toggleVoice,
+          compact: true,
+        ),
+        const SizedBox(width: 4),
+        _ModeToggle(mode: _mode, onTap: _switchMode),
+        const SizedBox(width: 2),
+        _IconBtn(icon: Icons.tune, onTap: _showSnippetManager),
+      ]),
     );
+  }
+
+  Widget _textInputRow({bool compact = false}) {
+    final h = compact ? 32.0 : 40.0;
+    return Row(children: [
+      Expanded(
+        child: Container(
+          height: h,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          decoration: BoxDecoration(
+            color: AppColors.surface2.withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.green.withValues(alpha: 0.25)),
+          ),
+          child: Center(
+            child: TextField(
+              controller: _textCtrl,
+              focusNode: _textFocus,
+              textInputAction: TextInputAction.send,
+              onSubmitted: (_) => _submitText(),
+              cursorColor: AppColors.green,
+              style: const TextStyle(
+                color: AppColors.textPrimary, fontFamily: 'monospace', fontSize: 13,
+              ),
+              decoration: const InputDecoration(
+                isDense: true,
+                hintText: 'Type command, Enter to send…',
+                hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          ),
+        ),
+      ),
+      const SizedBox(width: 6),
+      _SendBtn(onTap: _submitText, compact: compact),
+      const SizedBox(width: 4),
+      _ModeToggle(mode: _mode, onTap: _switchMode),
+    ]);
   }
 
   Widget _voiceTranscriptBar() {
@@ -272,7 +395,8 @@ class _VoiceBtn extends StatelessWidget {
   final bool error;
   final double level;
   final VoidCallback onTap;
-  const _VoiceBtn({required this.listening, required this.error, required this.level, required this.onTap});
+  final bool compact;
+  const _VoiceBtn({required this.listening, required this.error, required this.level, required this.onTap, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
@@ -281,12 +405,13 @@ class _VoiceBtn extends StatelessWidget {
     final glow = listening ? (0.3 + amplitude * 0.5) : 0.2;
     final borderAlpha = listening ? 0.9 : 0.55;
     final fillOuter = listening ? 0.35 + amplitude * 0.2 : 0.22;
+    final size = compact ? 34.0 : 44.0;
 
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 80),
-        width: 44, height: 44,
+        width: size, height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: RadialGradient(colors: [
@@ -300,9 +425,67 @@ class _VoiceBtn extends StatelessWidget {
         ),
         child: Icon(
           listening ? Icons.stop_rounded : Icons.mic_rounded,
-          size: 20,
+          size: compact ? 16 : 20,
           color: color,
         ),
+      ),
+    );
+  }
+}
+
+class _ModeToggle extends StatelessWidget {
+  final _InputMode mode;
+  final VoidCallback onTap;
+  const _ModeToggle({required this.mode, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final textMode = mode == _InputMode.text;
+    final color = textMode ? AppColors.blue : AppColors.textMuted;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        width: 30, height: 30,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: color.withValues(alpha: textMode ? 0.14 : 0.06),
+          border: Border.all(color: color.withValues(alpha: textMode ? 0.45 : 0.25)),
+        ),
+        child: Icon(
+          textMode ? Icons.mic_none_rounded : Icons.keyboard_rounded,
+          size: 14,
+          color: textMode ? AppColors.blue : AppColors.textMuted,
+        ),
+      ),
+    );
+  }
+}
+
+class _SendBtn extends StatelessWidget {
+  final VoidCallback onTap;
+  final bool compact;
+  const _SendBtn({required this.onTap, this.compact = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final size = compact ? 34.0 : 40.0;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: size, height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(colors: [
+            AppColors.green.withValues(alpha: 0.35),
+            AppColors.green.withValues(alpha: 0.08),
+          ]),
+          border: Border.all(color: AppColors.green.withValues(alpha: 0.7), width: 2),
+          boxShadow: [
+            BoxShadow(color: AppColors.green.withValues(alpha: 0.3), blurRadius: 10),
+          ],
+        ),
+        child: const Icon(Icons.arrow_upward_rounded, size: 18, color: AppColors.green),
       ),
     );
   }

@@ -45,6 +45,7 @@ class _MultiTabScreenState extends State<MultiTabScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final landscape = MediaQuery.of(context).orientation == Orientation.landscape;
     return Consumer<TabManager>(
       builder: (context, mgr, _) {
         final tabs = mgr.tabs;
@@ -61,6 +62,9 @@ class _MultiTabScreenState extends State<MultiTabScreen> {
                 MogshTabBar(
                   tabs: tabs,
                   activeIndex: mgr.activeIndex,
+                  compact: landscape,
+                  // Reserve space on the right side for the floating nav FAB
+                  trailing: landscape ? const SizedBox(width: 48) : null,
                   onSwitch: (i) => _onSwitch(mgr, i),
                   onClose: (id) {
                     _terminalKeys.remove(id);
