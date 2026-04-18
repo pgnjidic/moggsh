@@ -230,6 +230,10 @@ class _KeysPageState extends State<_KeysPage> {
                         ],
                       )),
                       IconButton(
+                        icon: const Icon(Icons.edit_outlined, color: _muted, size: 18),
+                        onPressed: () => _showRenameDialog(key),
+                      ),
+                      IconButton(
                         icon: const Icon(Icons.delete_outline, color: _red, size: 18),
                         onPressed: () async {
                           await SshKeyManager.delete(key.id);
@@ -242,6 +246,43 @@ class _KeysPageState extends State<_KeysPage> {
               ),
             ),
         ]),
+      ),
+    );
+  }
+
+  void _showRenameDialog(SshKeyEntry key) {
+    final ctrl = TextEditingController(text: key.label);
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: _surface,
+        title: const Text('Rename key',
+            style: TextStyle(color: _green, fontFamily: 'monospace', fontSize: 14)),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          style: const TextStyle(color: Colors.white, fontFamily: 'monospace', fontSize: 13),
+          decoration: const InputDecoration(
+            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: _border)),
+            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: _green)),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: _muted)),
+          ),
+          TextButton(
+            onPressed: () async {
+              final label = ctrl.text.trim();
+              if (label.isNotEmpty) {
+                await SshKeyManager.rename(key.id, label);
+                if (mounted) { Navigator.pop(context); _load(); }
+              }
+            },
+            child: const Text('Save', style: TextStyle(color: _green)),
+          ),
+        ],
       ),
     );
   }

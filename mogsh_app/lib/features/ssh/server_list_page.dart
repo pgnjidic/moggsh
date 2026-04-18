@@ -87,6 +87,31 @@ class _ServerListPageState extends State<ServerListPage> {
     );
   }
 
+  void _showEditDialog(ServerProfile profile) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF12121A),
+      builder: (_) => _AddServerSheet(
+        initial: profile,
+        onAdd: (updated) async {
+          await _service.update(ServerProfile(
+            id: profile.id,
+            label: updated.label,
+            host: updated.host,
+            username: updated.username,
+            port: updated.port,
+            password: updated.password,
+            keyId: updated.keyId,
+            startupScript: updated.startupScript,
+            lastConnected: profile.lastConnected,
+          ));
+          _load();
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -134,6 +159,7 @@ class _ServerListPageState extends State<ServerListPage> {
                   itemBuilder: (_, i) => _ServerTile(
                     profile: _profiles[i],
                     onTap: () => _connect(_profiles[i]),
+                    onEdit: () => _showEditDialog(_profiles[i]),
                     onDelete: () async {
                       await _service.delete(_profiles[i].id);
                       _load();
@@ -151,9 +177,15 @@ class _ServerListPageState extends State<ServerListPage> {
 class _ServerTile extends StatelessWidget {
   final ServerProfile profile;
   final VoidCallback onTap;
+  final VoidCallback onEdit;
   final VoidCallback onDelete;
 
-  const _ServerTile({required this.profile, required this.onTap, required this.onDelete});
+  const _ServerTile({
+    required this.profile,
+    required this.onTap,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -168,6 +200,10 @@ class _ServerTile extends StatelessWidget {
         if (profile.lastConnected != null)
           Text(_timeAgo(profile.lastConnected!),
               style: const TextStyle(color: Color(0xFF444466), fontSize: 10, fontFamily: 'monospace')),
+        IconButton(
+          icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF444466)),
+          onPressed: onEdit,
+        ),
         IconButton(
           icon: const Icon(Icons.delete_outline, size: 16, color: Color(0xFF444466)),
           onPressed: onDelete,
@@ -186,19 +222,20 @@ class _ServerTile extends StatelessWidget {
 
 class _AddServerSheet extends StatefulWidget {
   final ValueChanged<ServerProfile> onAdd;
-  const _AddServerSheet({required this.onAdd});
+  final ServerProfile? initial;
+  const _AddServerSheet({required this.onAdd, this.initial});
 
   @override
   State<_AddServerSheet> createState() => _AddServerSheetState();
 }
 
 class _AddServerSheetState extends State<_AddServerSheet> {
-  final _host   = TextEditingController();
-  final _user   = TextEditingController(text: 'root');
-  final _port   = TextEditingController(text: '22');
-  final _label  = TextEditingController();
-  final _pass   = TextEditingController();
-  final _script = TextEditingController();
+  late final TextEditingController _host;
+  late final TextEditingController _user;
+  late final TextEditingController _port;
+  late final TextEditingController _label;
+  late final TextEditingController _pass;
+  late final TextEditingController _script;
 
   List<SshKeyEntry> _keys = [];
   String? _selectedKeyId;
@@ -207,9 +244,19 @@ class _AddServerSheetState extends State<_AddServerSheet> {
   static const _muted  = Color(0xFF666688);
   static const _border = Color(0xFF2A2A3E);
 
+  bool get _isEdit => widget.initial != null;
+
   @override
   void initState() {
     super.initState();
+    final p = widget.initial;
+    _host   = TextEditingController(text: p?.host ?? '');
+    _user   = TextEditingController(text: p?.username ?? 'root');
+    _port   = TextEditingController(text: (p?.port ?? 22).toString());
+    _label  = TextEditingController(text: p?.label ?? '');
+    _pass   = TextEditingController(text: p?.password ?? '');
+    _script = TextEditingController(text: p?.startupScript ?? '');
+    _selectedKeyId = p?.keyId;
     SshKeyManager.listAll().then((keys) {
       if (mounted) setState(() => _keys = keys);
     });
@@ -222,8 +269,8 @@ class _AddServerSheetState extends State<_AddServerSheet> {
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Add server',
-              style: TextStyle(color: _green, fontFamily: 'monospace', fontSize: 16)),
+          Text(_isEdit ? 'Edit server' : 'Add server',
+              style: const TextStyle(color: _green, fontFamily: 'monospace', fontSize: 16)),
           const SizedBox(height: 16),
           _field(_label, 'Label', 'My VPS'),
           _field(_host,  'Host',  '1.2.3.4'),
@@ -288,7 +335,7 @@ class _AddServerSheetState extends State<_AddServerSheet> {
                 ));
                 Navigator.pop(context);
               },
-              child: const Text('Add server', style: TextStyle(fontFamily: 'monospace')),
+              child: Text(_isEdit ? 'Save' : 'Add server', style: const TextStyle(fontFamily: 'monospace')),
             ),
           ),
         ]),

@@ -95,6 +95,10 @@ class SshKeyManager {
     return keys.isEmpty ? null : keys.first;
   }
 
+  static Future<void> rename(String id, String newLabel) async {
+    await _storage.write(key: 'sshkey_label_$id', value: newLabel);
+  }
+
   static Future<void> delete(String id) async {
     await _storage.delete(key: 'sshkey_priv_$id');
     await _storage.delete(key: 'sshkey_pub_$id');
