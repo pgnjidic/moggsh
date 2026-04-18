@@ -8,7 +8,7 @@ class MogshTabBar extends StatelessWidget {
   final ValueChanged<int> onSwitch;
   final ValueChanged<String> onClose;
   final ValueChanged<String> onRename;
-  final VoidCallback onAddTab;
+  final VoidCallback? onAddTab;
 
   const MogshTabBar({
     super.key,
@@ -17,7 +17,7 @@ class MogshTabBar extends StatelessWidget {
     required this.onSwitch,
     required this.onClose,
     required this.onRename,
-    required this.onAddTab,
+    this.onAddTab,
   });
 
   static const _bg      = Color(0xFF0A0A0F);
@@ -26,9 +26,10 @@ class MogshTabBar extends StatelessWidget {
 
   Color _dotColor(SessionState state) {
     return switch (state) {
-      SessionState.active  => _green,
-      SessionState.idle    => const Color(0xFFFFD700),
-      SessionState.offline => const Color(0xFFFF5555),
+      SessionState.connecting => const Color(0xFFFFD700),
+      SessionState.active     => _green,
+      SessionState.idle       => const Color(0xFFFFD700),
+      SessionState.offline    => const Color(0xFFFF5555),
     };
   }
 
@@ -56,17 +57,17 @@ class MogshTabBar extends StatelessWidget {
               ),
             ),
           ),
-          // Add tab button
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              onAddTab();
-            },
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10),
-              child: Icon(Icons.add, color: _muted, size: 18),
+          if (onAddTab != null)
+            GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                onAddTab!();
+              },
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10),
+                child: Icon(Icons.add, color: _muted, size: 18),
+              ),
             ),
-          ),
         ],
       ),
     );

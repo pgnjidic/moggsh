@@ -3,11 +3,17 @@ import 'models/server_profile.dart';
 import 'services/server_profile_service.dart';
 import 'services/ssh_session.dart';
 import 'widgets/tmux_picker.dart';
-import '../terminal/terminal_widget.dart';
-import '../terminal/widgets/shortcut_bar.dart';
+import '../terminal/tabs/tab_manager.dart';
 
 class ServerListPage extends StatefulWidget {
-  const ServerListPage({super.key});
+  final TabManager tabManager;
+  final VoidCallback onConnected;
+
+  const ServerListPage({
+    super.key,
+    required this.tabManager,
+    required this.onConnected,
+  });
 
   @override
   State<ServerListPage> createState() => _ServerListPageState();
@@ -17,9 +23,9 @@ class _ServerListPageState extends State<ServerListPage> {
   final _service = ServerProfileService();
   List<ServerProfile> _profiles = [];
 
-  static const _green  = Color(0xFF00FF88);
-  static const _bg     = Color(0xFF0A0A0F);
-  static const _muted  = Color(0xFF666688);
+  static const _green = Color(0xFF00FF88);
+  static const _bg    = Color(0xFF0A0A0F);
+  static const _muted = Color(0xFF666688);
 
   @override
   void initState() { super.initState(); _load(); }
@@ -33,50 +39,51 @@ class _ServerListPageState extends State<ServerListPage> {
     final session = SshSession(profile);
     await session.connect();
 
-    // Check tmux sessions
-    if (session.state == SshConnectionState.connected) {
-      final tmuxSessions = await session.listTmuxSessions();
+    if (session.state != SshConnectionState.connected) return;
+    if (!mounted) return;
 
-      if (!mounted) return;
-      if (tmuxSessions.isNotEmpty && (profile.startupScript == null || profile.startupScript!.isEmpty)) {
-        showModalBottomSheet(
-          context: context,
-          builder: (_) => TmuxPickerSheet(
-            sessions: tmuxSessions,
-            onSelect: (s) {
-              if (s != null) session.attachTmux(s);
-              _openTerminal(session, profile);
-            },
-          ),
-        );
-      } else {
-        _openTerminal(session, profile);
-      }
+    final tmuxSessions = await session.listTmuxSessions();
 
-      // Update last connected
-      profile.lastConnected = DateTime.now();
-      await _service.update(profile);
+    if (!mounted) return;
+    if (tmuxSessions.isNotEmpty &&
+        (profile.startupScript == null || profile.startupScript!.isEmpty)) {
+      showModalBottomSheet(
+        context: context,
+        builder: (_) => TmuxPickerSheet(
+          sessions: tmuxSessions,
+          onSelect: (s) {
+            if (s != null) session.attachTmux(s);
+            _openTab(session, profile);
+          },
+        ),
+      );
+    } else {
+      _openTab(session, profile);
     }
+
+    profile.lastConnected = DateTime.now();
+    await _service.update(profile);
   }
 
-  void _openTerminal(SshSession session, ServerProfile profile) {
-    // Push SSH tab into TabManager — for now Navigator placeholder
-    Navigator.push(context, MaterialPageRoute(
-      builder: (_) => _SshTerminalPage(session: session, title: profile.label),
-    ));
+  void _openTab(SshSession session, ServerProfile profile) {
+    widget.tabManager.addSshTab(session, profile.label);
+    widget.onConnected();
   }
 
   void _showAddDialog() {
-    showModalBottomSheet(context: context, isScrollControlled: true,
-        backgroundColor: const Color(0xFF12121A),
-        builder: (_) => _AddServerSheet(onAdd: (p) async {
-          await _service.add(
-            label: p.label, host: p.host, username: p.username,
-            port: p.port, password: p.password, keyId: p.keyId,
-            startupScript: p.startupScript,
-          );
-          _load();
-        }));
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF12121A),
+      builder: (_) => _AddServerSheet(onAdd: (p) async {
+        await _service.add(
+          label: p.label, host: p.host, username: p.username,
+          port: p.port, password: p.password, keyId: p.keyId,
+          startupScript: p.startupScript,
+        );
+        _load();
+      }),
+    );
   }
 
   @override
@@ -92,7 +99,9 @@ class _ServerListPageState extends State<ServerListPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('servers',
-                      style: TextStyle(color: _green, fontSize: 18, fontFamily: 'monospace', letterSpacing: 2)),
+                      style: TextStyle(
+                          color: _green, fontSize: 18,
+                          fontFamily: 'monospace', letterSpacing: 2)),
                   IconButton(
                     icon: const Icon(Icons.add, color: _green),
                     onPressed: _showAddDialog,
@@ -101,14 +110,22 @@ class _ServerListPageState extends State<ServerListPage> {
               ),
             ),
             if (_profiles.isEmpty)
-              Expanded(child: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-                const Icon(Icons.dns_outlined, color: Color(0xFF333355), size: 48),
-                const SizedBox(height: 12),
-                const Text('No servers yet', style: TextStyle(color: _muted, fontFamily: 'monospace')),
-                const SizedBox(height: 8),
-                TextButton(onPressed: _showAddDialog,
-                    child: const Text('+ Add server', style: TextStyle(color: _green, fontFamily: 'monospace'))),
-              ])))
+              Expanded(
+                child: Center(
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    const Icon(Icons.dns_outlined, color: Color(0xFF333355), size: 48),
+                    const SizedBox(height: 12),
+                    const Text('No servers yet',
+                        style: TextStyle(color: _muted, fontFamily: 'monospace')),
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: _showAddDialog,
+                      child: const Text('+ Add server',
+                          style: TextStyle(color: _green, fontFamily: 'monospace')),
+                    ),
+                  ]),
+                ),
+              )
             else
               Expanded(
                 child: ListView.builder(
@@ -175,11 +192,11 @@ class _AddServerSheet extends StatefulWidget {
 }
 
 class _AddServerSheetState extends State<_AddServerSheet> {
-  final _host = TextEditingController();
-  final _user = TextEditingController(text: 'root');
-  final _port = TextEditingController(text: '22');
-  final _label = TextEditingController();
-  final _pass = TextEditingController();
+  final _host   = TextEditingController();
+  final _user   = TextEditingController(text: 'root');
+  final _port   = TextEditingController(text: '22');
+  final _label  = TextEditingController();
+  final _pass   = TextEditingController();
   final _script = TextEditingController();
 
   @override
@@ -193,32 +210,39 @@ class _AddServerSheetState extends State<_AddServerSheet> {
               style: TextStyle(color: Color(0xFF00FF88), fontFamily: 'monospace', fontSize: 16)),
           const SizedBox(height: 16),
           _field(_label, 'Label', 'My VPS'),
-          _field(_host, 'Host', '1.2.3.4'),
+          _field(_host,  'Host',  '1.2.3.4'),
           Row(children: [
             Expanded(child: _field(_user, 'User', 'root')),
             const SizedBox(width: 8),
             SizedBox(width: 80, child: _field(_port, 'Port', '22', keyboard: TextInputType.number)),
           ]),
-          _field(_pass, 'Password (optional)', '', obscure: true),
+          _field(_pass,   'Password (optional)', '', obscure: true),
           _field(_script, 'Startup script (optional)', 'cd myproject'),
           const SizedBox(height: 16),
-          SizedBox(width: double.infinity, child: ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00FF88),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF00FF88),
                 foregroundColor: const Color(0xFF0A0A0F),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4))),
-            onPressed: () {
-              if (_host.text.isEmpty || _user.text.isEmpty) return;
-              widget.onAdd(ServerProfile(
-                id: '', label: _label.text.isEmpty ? _host.text : _label.text,
-                host: _host.text.trim(), username: _user.text.trim(),
-                port: int.tryParse(_port.text) ?? 22,
-                password: _pass.text.isEmpty ? null : _pass.text,
-                startupScript: _script.text.isEmpty ? null : _script.text,
-              ));
-              Navigator.pop(context);
-            },
-            child: const Text('Add server', style: TextStyle(fontFamily: 'monospace')),
-          )),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+              ),
+              onPressed: () {
+                if (_host.text.isEmpty || _user.text.isEmpty) return;
+                widget.onAdd(ServerProfile(
+                  id: '',
+                  label: _label.text.isEmpty ? _host.text : _label.text,
+                  host: _host.text.trim(),
+                  username: _user.text.trim(),
+                  port: int.tryParse(_port.text) ?? 22,
+                  password: _pass.text.isEmpty ? null : _pass.text,
+                  startupScript: _script.text.isEmpty ? null : _script.text,
+                ));
+                Navigator.pop(context);
+              },
+              child: const Text('Add server', style: TextStyle(fontFamily: 'monospace')),
+            ),
+          ),
         ]),
       ),
     );
@@ -229,7 +253,9 @@ class _AddServerSheetState extends State<_AddServerSheet> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: TextField(
-        controller: c, obscureText: obscure, keyboardType: keyboard,
+        controller: c,
+        obscureText: obscure,
+        keyboardType: keyboard,
         style: const TextStyle(color: Colors.white, fontFamily: 'monospace', fontSize: 13),
         decoration: InputDecoration(
           labelText: label,
@@ -242,83 +268,4 @@ class _AddServerSheetState extends State<_AddServerSheet> {
       ),
     );
   }
-}
-
-// Minimal SSH terminal page — reuses TerminalWidget
-class _SshTerminalPage extends StatefulWidget {
-  final SshSession session;
-  final String title;
-  const _SshTerminalPage({required this.session, required this.title});
-
-  @override
-  State<_SshTerminalPage> createState() => _SshTerminalPageState();
-}
-
-class _SshTerminalPageState extends State<_SshTerminalPage> {
-  final _terminalKey = GlobalKey<TerminalWidgetState>();
-
-  void _onReady() {
-    widget.session.output.listen((data) {
-      _terminalKey.currentState?.write(data);
-    });
-    // Show connection state
-    widget.session.stateChanges.listen((state) {
-      if (state == SshConnectionState.disconnected) {
-        _terminalKey.currentState?.write('\r\n\x1b[33m[disconnected]\x1b[0m\r\n');
-      } else if (state == SshConnectionState.reconnecting) {
-        _terminalKey.currentState?.write('\r\n\x1b[33m[reconnecting...]\x1b[0m\r\n');
-      }
-    });
-  }
-
-  @override
-  void dispose() { widget.session.dispose(); super.dispose(); }
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFF0A0A0F),
-    appBar: AppBar(
-      backgroundColor: const Color(0xFF12121A),
-      elevation: 0,
-      titleSpacing: 0,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF666688), size: 16),
-        onPressed: () { widget.session.disconnect(); Navigator.pop(context); },
-      ),
-      title: Row(children: [
-        Container(
-          width: 7, height: 7,
-          decoration: BoxDecoration(
-            color: widget.session.state == SshConnectionState.connected
-                ? const Color(0xFF00FF88) : const Color(0xFFFF5555),
-            shape: BoxShape.circle,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(widget.title,
-            style: const TextStyle(color: Colors.white, fontFamily: 'monospace', fontSize: 13)),
-        const SizedBox(width: 6),
-        Text(widget.session.profile.host,
-            style: const TextStyle(color: Color(0xFF666688), fontFamily: 'monospace', fontSize: 11)),
-      ]),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.close, color: Color(0xFFFF5555), size: 18),
-          onPressed: widget.session.sendCtrlC,
-          tooltip: 'Ctrl+C',
-        ),
-      ],
-    ),
-    body: Column(children: [
-      Expanded(
-        child: TerminalWidget(
-          key: _terminalKey,
-          onReady: _onReady,
-          onInput: widget.session.write,
-          onResize: widget.session.resize,
-        ),
-      ),
-      ShortcutBar(onSend: widget.session.write),
-    ]),
-  );
 }

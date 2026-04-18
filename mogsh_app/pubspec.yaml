@@ -1,5 +1,5 @@
 name: mogsh
-description: "mogsh — terminal emulator for Android. SSH + local Linux environment."
+description: "mogsh — SSH terminal client for Android, optimized for vibe coding."
 publish_to: 'none'
 
 version: 0.1.0+1
@@ -28,23 +28,8 @@ dependencies:
   # Terminal emulator (WebView-based xterm.js)
   webview_flutter: ^4.10.0
 
-  # PTY (pseudo-terminal) for local shell
-  flutter_pty: ^0.4.2
-
-  # HTTP for downloading rootfs/proot on first run
-  http: ^1.2.2
-
-  # Archive extraction
-  archive: ^3.6.1
-
   # Biometric auth for SSH key export
   local_auth: ^2.3.0
-
-  # Deep links (OAuth callback)
-  app_links: ^6.3.2
-
-  # Launch URLs (OAuth browser)
-  url_launcher: ^6.3.1
 
   # Utilities
   path_provider: ^2.1.5

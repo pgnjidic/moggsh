@@ -5,6 +5,7 @@ import 'features/settings/settings_service.dart';
 import 'features/ssh/server_list_page.dart';
 import 'features/ssh/services/ssh_key_manager.dart';
 import 'features/terminal/multi_tab_screen.dart';
+import 'features/terminal/tabs/tab_manager.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,6 +16,21 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _tab = 0;
+  late final TabManager _tabManager;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabManager = TabManager();
+  }
+
+  @override
+  void dispose() {
+    _tabManager.dispose();
+    super.dispose();
+  }
+
+  void switchToTerminal() => setState(() => _tab = 0);
 
   static const _bg      = Color(0xFF0A0A0F);
   static const _surface = Color(0xFF12121A);
@@ -27,11 +43,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _bg,
-      body: IndexedStack(
+      body: ChangeNotifierProvider.value(
+        value: _tabManager,
+        child: IndexedStack(
         index: _tab,
         children: [
           const MultiTabScreen(),
-          const ServerListPage(),
+          ServerListPage(tabManager: _tabManager, onConnected: switchToTerminal),
           const _KeysPage(),
           ChangeNotifierProvider(
             create: (_) => SettingsService()..init(),
@@ -40,6 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ],
+        ),
       ),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
