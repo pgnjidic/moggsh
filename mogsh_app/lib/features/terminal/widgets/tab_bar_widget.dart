@@ -163,8 +163,12 @@ class _TabPill extends StatelessWidget {
           const SizedBox(width: 6),
           GestureDetector(
             onTap: onClose,
-            child: Icon(Icons.close, size: 12,
-                color: isActive ? AppColors.teal.withValues(alpha: 0.7) : AppColors.textMuted.withValues(alpha: 0.5)),
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: Icon(Icons.close, size: 12,
+                  color: isActive ? AppColors.teal.withValues(alpha: 0.7) : AppColors.textMuted.withValues(alpha: 0.5)),
+            ),
           ),
         ]),
       ),

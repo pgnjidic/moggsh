@@ -21,6 +21,7 @@ class ServerListPage extends StatefulWidget {
 class _ServerListPageState extends State<ServerListPage> {
   final _service = ServerProfileService();
   List<ServerProfile> _profiles = [];
+  String? _connectingId;
 
   @override
   void initState() {
@@ -47,29 +48,34 @@ class _ServerListPageState extends State<ServerListPage> {
   }
 
   Future<void> _connect(ServerProfile profile) async {
-    final session = SshSession(profile);
-    await session.connect();
-    if (session.state != SshConnectionState.connected) return;
-    if (!mounted) return;
+    setState(() => _connectingId = profile.id);
+    try {
+      final session = SshSession(profile);
+      await session.connect();
+      if (session.state != SshConnectionState.connected) return;
+      if (!mounted) return;
 
-    final tmuxSessions = await session.listTmuxSessions();
-    if (!mounted) return;
+      final tmuxSessions = await session.listTmuxSessions();
+      if (!mounted) return;
 
-    if (tmuxSessions.isNotEmpty &&
-        (profile.startupScript == null || profile.startupScript!.isEmpty)) {
-      showModalBottomSheet(
-        context: context,
-        builder: (_) => TmuxPickerSheet(
-          sessions: tmuxSessions,
-          onSelect: (s) { if (s != null) session.attachTmux(s); _openTab(session, profile); },
-        ),
-      );
-    } else {
-      _openTab(session, profile);
+      if (tmuxSessions.isNotEmpty &&
+          (profile.startupScript == null || profile.startupScript!.isEmpty)) {
+        showModalBottomSheet(
+          context: context,
+          builder: (_) => TmuxPickerSheet(
+            sessions: tmuxSessions,
+            onSelect: (s) { if (s != null) session.attachTmux(s); _openTab(session, profile); },
+          ),
+        );
+      } else {
+        _openTab(session, profile);
+      }
+
+      profile.lastConnected = DateTime.now();
+      await _service.update(profile);
+    } finally {
+      if (mounted) setState(() => _connectingId = null);
     }
-
-    profile.lastConnected = DateTime.now();
-    await _service.update(profile);
   }
 
   void _openTab(SshSession session, ServerProfile profile) {
@@ -167,7 +173,8 @@ class _ServerListPageState extends State<ServerListPage> {
           _SectionHeader(label: 'LOCAL', color: AppColors.amber),
           ...local.map((p) => _ServerTile(
             profile: p, isLocal: true, isConnected: _isConnected(p.id),
-            onTap: () => _connect(p),
+            isConnecting: _connectingId == p.id,
+            onTap: () { if (_connectingId == null) _connect(p); },
             onEdit: () => _showEditDialog(p),
             onDelete: () async { await _service.delete(p.id); _load(); },
           )),
@@ -175,7 +182,8 @@ class _ServerListPageState extends State<ServerListPage> {
         _SectionHeader(label: 'SSH SERVERS', color: AppColors.blue),
         ...remote.map((p) => _ServerTile(
           profile: p, isLocal: false, isConnected: _isConnected(p.id),
-          onTap: () => _connect(p),
+          isConnecting: _connectingId == p.id,
+          onTap: () { if (_connectingId == null) _connect(p); },
           onEdit: () => _showEditDialog(p),
           onDelete: () async { await _service.delete(p.id); _load(); },
         )),
@@ -202,6 +210,7 @@ class _ServerTile extends StatelessWidget {
   final ServerProfile profile;
   final bool isLocal;
   final bool isConnected;
+  final bool isConnecting;
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -210,12 +219,14 @@ class _ServerTile extends StatelessWidget {
     required this.profile,
     required this.isLocal,
     required this.isConnected,
+    required this.isConnecting,
     required this.onTap,
     required this.onEdit,
     required this.onDelete,
   });
 
   (Color, bool) get _statusInfo {
+    if (isConnecting) return (AppColors.amber, false);
     if (isConnected) return (AppColors.green, true);
     if (profile.lastConnected == null) return (AppColors.textMuted, false);
     final age = DateTime.now().difference(profile.lastConnected!);
@@ -224,6 +235,7 @@ class _ServerTile extends StatelessWidget {
   }
 
   String get _statusSubtitle {
+    if (isConnecting) return 'connecting…';
     if (isConnected) return 'connected';
     if (profile.lastConnected == null) return 'idle';
     final age = DateTime.now().difference(profile.lastConnected!);
@@ -334,29 +346,43 @@ class _ServerTile extends StatelessWidget {
               ),
             ]),
           ])),
-          // Action buttons — 40×40 tap targets
-          GestureDetector(
-            onTap: onEdit,
-            behavior: HitTestBehavior.opaque,
-            child: SizedBox(
+          if (isConnecting)
+            SizedBox(
               width: 40, height: 40,
               child: Center(
-                child: Icon(Icons.edit_outlined,
-                    color: AppColors.blue.withValues(alpha: 0.6), size: 16),
+                child: SizedBox(
+                  width: 14, height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 1.5,
+                    color: AppColors.amber.withValues(alpha: 0.8),
+                  ),
+                ),
+              ),
+            )
+          else ...[
+            GestureDetector(
+              onTap: onEdit,
+              behavior: HitTestBehavior.opaque,
+              child: SizedBox(
+                width: 40, height: 40,
+                child: Center(
+                  child: Icon(Icons.edit_outlined,
+                      color: AppColors.blue.withValues(alpha: 0.6), size: 16),
+                ),
               ),
             ),
-          ),
-          GestureDetector(
-            onTap: () => _confirmDelete(context),
-            behavior: HitTestBehavior.opaque,
-            child: SizedBox(
-              width: 40, height: 40,
-              child: Center(
-                child: Icon(Icons.delete_outline,
-                    color: AppColors.red.withValues(alpha: 0.6), size: 16),
+            GestureDetector(
+              onTap: () => _confirmDelete(context),
+              behavior: HitTestBehavior.opaque,
+              child: SizedBox(
+                width: 40, height: 40,
+                child: Center(
+                  child: Icon(Icons.delete_outline,
+                      color: AppColors.red.withValues(alpha: 0.6), size: 16),
+                ),
               ),
             ),
-          ),
+          ],
         ]),
       ),
     );
