@@ -18,16 +18,19 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _tab = 0;
   late final TabManager _tabManager;
+  late final SettingsService _settings;
 
   @override
   void initState() {
     super.initState();
     _tabManager = TabManager();
+    _settings = SettingsService()..init();
   }
 
   @override
   void dispose() {
     _tabManager.dispose();
+    _settings.dispose();
     super.dispose();
   }
 
@@ -37,19 +40,19 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bg,
-      body: ChangeNotifierProvider.value(
-        value: _tabManager,
+      body: MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: _tabManager),
+          ChangeNotifierProvider.value(value: _settings),
+        ],
         child: IndexedStack(
           index: _tab,
           children: [
             const MultiTabScreen(),
             ServerListPage(tabManager: _tabManager, onConnected: switchToTerminal),
             const _KeysPage(),
-            ChangeNotifierProvider(
-              create: (_) => SettingsService()..init(),
-              child: Consumer<SettingsService>(
-                builder: (_, svc, _) => SettingsPage(service: svc),
-              ),
+            Consumer<SettingsService>(
+              builder: (_, svc, _) => SettingsPage(service: svc),
             ),
           ],
         ),
@@ -225,13 +228,19 @@ class _KeysPageState extends State<_KeysPage> {
                               fontFamily: 'monospace', fontSize: 9),
                         ),
                       ])),
-                      GestureDetector(onTap: () => _showRenameDialog(key),
-                          child: const Padding(padding: EdgeInsets.all(6),
-                              child: Icon(Icons.edit_outlined, color: AppColors.textMuted, size: 15))),
                       GestureDetector(
-                        onTap: () async { await SshKeyManager.delete(key.id); _load(); },
-                        child: const Padding(padding: EdgeInsets.all(6),
-                            child: Icon(Icons.delete_outline, color: AppColors.red, size: 15)),
+                        onTap: () => _showRenameDialog(key),
+                        behavior: HitTestBehavior.opaque,
+                        child: const SizedBox(width: 40, height: 40,
+                            child: Center(child: Icon(Icons.edit_outlined,
+                                color: AppColors.textMuted, size: 16))),
+                      ),
+                      GestureDetector(
+                        onTap: () => _confirmDelete(key),
+                        behavior: HitTestBehavior.opaque,
+                        child: SizedBox(width: 40, height: 40,
+                            child: Center(child: Icon(Icons.delete_outline,
+                                color: AppColors.red.withValues(alpha: 0.7), size: 16))),
                       ),
                     ]),
                   );
@@ -239,6 +248,31 @@ class _KeysPageState extends State<_KeysPage> {
               ),
             ),
         ]),
+      ),
+    );
+  }
+
+  void _confirmDelete(SshKeyEntry key) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text('Delete "${key.label}"?',
+            style: const TextStyle(color: AppColors.textPrimary, fontFamily: 'monospace', fontSize: 14)),
+        content: const Text('This cannot be undone.',
+            style: TextStyle(color: AppColors.textMuted, fontFamily: 'monospace', fontSize: 12)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted))),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await SshKeyManager.delete(key.id);
+              _load();
+            },
+            child: const Text('Delete', style: TextStyle(color: AppColors.red)),
+          ),
+        ],
       ),
     );
   }

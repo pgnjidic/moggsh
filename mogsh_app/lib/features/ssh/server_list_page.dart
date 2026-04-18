@@ -6,6 +6,7 @@ import 'services/ssh_key_manager.dart';
 import 'services/ssh_session.dart';
 import 'widgets/tmux_picker.dart';
 import '../terminal/tabs/tab_manager.dart';
+import '../terminal/tabs/terminal_tab.dart';
 
 class ServerListPage extends StatefulWidget {
   final TabManager tabManager;
@@ -22,7 +23,23 @@ class _ServerListPageState extends State<ServerListPage> {
   List<ServerProfile> _profiles = [];
 
   @override
-  void initState() { super.initState(); _load(); }
+  void initState() {
+    super.initState();
+    _load();
+    widget.tabManager.addListener(_onTabsChanged);
+  }
+
+  void _onTabsChanged() => setState(() {});
+
+  @override
+  void dispose() {
+    widget.tabManager.removeListener(_onTabsChanged);
+    super.dispose();
+  }
+
+  bool _isConnected(String profileId) => widget.tabManager.tabs.any(
+    (t) => t.session.profile.id == profileId && t.sessionState == SessionState.active,
+  );
 
   Future<void> _load() async {
     final p = await _service.loadAll();
@@ -149,7 +166,7 @@ class _ServerListPageState extends State<ServerListPage> {
         if (local.isNotEmpty) ...[
           _SectionHeader(label: 'LOCAL', color: AppColors.amber),
           ...local.map((p) => _ServerTile(
-            profile: p, isLocal: true,
+            profile: p, isLocal: true, isConnected: _isConnected(p.id),
             onTap: () => _connect(p),
             onEdit: () => _showEditDialog(p),
             onDelete: () async { await _service.delete(p.id); _load(); },
@@ -157,7 +174,7 @@ class _ServerListPageState extends State<ServerListPage> {
         ],
         _SectionHeader(label: 'SSH SERVERS', color: AppColors.blue),
         ...remote.map((p) => _ServerTile(
-          profile: p, isLocal: false,
+          profile: p, isLocal: false, isConnected: _isConnected(p.id),
           onTap: () => _connect(p),
           onEdit: () => _showEditDialog(p),
           onDelete: () async { await _service.delete(p.id); _load(); },
@@ -184,28 +201,56 @@ class _SectionHeader extends StatelessWidget {
 class _ServerTile extends StatelessWidget {
   final ServerProfile profile;
   final bool isLocal;
+  final bool isConnected;
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
-  const _ServerTile({required this.profile, required this.isLocal, required this.onTap,
-      required this.onEdit, required this.onDelete});
+  const _ServerTile({
+    required this.profile,
+    required this.isLocal,
+    required this.isConnected,
+    required this.onTap,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
   (Color, bool) get _statusInfo {
+    if (isConnected) return (AppColors.green, true);
     if (profile.lastConnected == null) return (AppColors.textMuted, false);
     final age = DateTime.now().difference(profile.lastConnected!);
-    if (age.inMinutes < 30) return (AppColors.green, true);
     if (age.inHours < 24) return (AppColors.blue, false);
     return (AppColors.textMuted, false);
   }
 
   String get _statusSubtitle {
+    if (isConnected) return 'connected';
     if (profile.lastConnected == null) return 'idle';
     final age = DateTime.now().difference(profile.lastConnected!);
-    if (age.inMinutes < 30) return 'connected';
     if (age.inHours < 24) return 'detached';
-    if (age.inDays < 7)  return 'idle · ${age.inDays}d';
+    if (age.inDays < 7) return 'idle · ${age.inDays}d';
     return 'offline';
+  }
+
+  void _confirmDelete(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text('Delete ${profile.label}?',
+            style: const TextStyle(color: AppColors.textPrimary, fontFamily: 'monospace', fontSize: 14)),
+        content: const Text('This cannot be undone.',
+            style: TextStyle(color: AppColors.textMuted, fontFamily: 'monospace', fontSize: 12)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted))),
+          TextButton(
+            onPressed: () { Navigator.pop(context); onDelete(); },
+            child: const Text('Delete', style: TextStyle(color: AppColors.red)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -222,7 +267,7 @@ class _ServerTile extends StatelessWidget {
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.fromLTRB(12, 0, 12, 6),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
         decoration: BoxDecoration(
           color: tileBg,
           borderRadius: BorderRadius.circular(12),
@@ -265,34 +310,53 @@ class _ServerTile extends StatelessWidget {
                 ),
             ]),
             const SizedBox(height: 2),
-            Text(
-              isLocal
-                ? _statusSubtitle
-                : '${profile.username}@${profile.host} · $_statusSubtitle',
-              style: TextStyle(
-                color: glow ? AppColors.green.withValues(alpha: 0.8) : AppColors.textMuted,
-                fontFamily: 'monospace', fontSize: 10,
+            Row(children: [
+              Container(
+                width: 6, height: 6,
+                margin: const EdgeInsets.only(right: 5),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: dot,
+                  boxShadow: glow ? [BoxShadow(color: dot.withValues(alpha: 0.7), blurRadius: 5)] : null,
+                ),
+              ),
+              Flexible(
+                child: Text(
+                  isLocal
+                    ? _statusSubtitle
+                    : '${profile.username}@${profile.host} · $_statusSubtitle',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: glow ? AppColors.green.withValues(alpha: 0.8) : AppColors.textMuted,
+                    fontFamily: 'monospace', fontSize: 10,
+                  ),
+                ),
+              ),
+            ]),
+          ])),
+          // Action buttons — 40×40 tap targets
+          GestureDetector(
+            onTap: onEdit,
+            behavior: HitTestBehavior.opaque,
+            child: SizedBox(
+              width: 40, height: 40,
+              child: Center(
+                child: Icon(Icons.edit_outlined,
+                    color: AppColors.blue.withValues(alpha: 0.6), size: 16),
               ),
             ),
-          ])),
-          Container(
-            width: 7, height: 7,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: dot,
-              boxShadow: glow ? [BoxShadow(color: dot.withValues(alpha: 0.7), blurRadius: 6)] : null,
+          ),
+          GestureDetector(
+            onTap: () => _confirmDelete(context),
+            behavior: HitTestBehavior.opaque,
+            child: SizedBox(
+              width: 40, height: 40,
+              child: Center(
+                child: Icon(Icons.delete_outline,
+                    color: AppColors.red.withValues(alpha: 0.6), size: 16),
+              ),
             ),
           ),
-          const SizedBox(width: 8),
-          GestureDetector(onTap: onEdit,
-              child: const Padding(padding: EdgeInsets.all(4),
-                  child: Icon(Icons.edit_outlined, color: AppColors.textMuted, size: 14))),
-          GestureDetector(onTap: onDelete,
-              child: const Padding(padding: EdgeInsets.all(4),
-                  child: Icon(Icons.delete_outline, color: AppColors.textMuted, size: 14))),
-          Icon(Icons.chevron_right,
-              color: glow ? AppColors.teal.withValues(alpha: 0.5) : AppColors.teal.withValues(alpha: 0.2),
-              size: 16),
         ]),
       ),
     );

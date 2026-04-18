@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../settings/settings_service.dart';
 import 'tabs/tab_manager.dart';
 import 'tabs/terminal_tab.dart';
 import 'terminal_widget.dart';
@@ -134,6 +135,7 @@ class _TabPage extends StatefulWidget {
 
 class _TabPageState extends State<_TabPage> with AutomaticKeepAliveClientMixin {
   StreamSubscription<String>? _outputSub;
+  double _lastAppliedFontSize = 0;
 
   @override
   bool get wantKeepAlive => true;
@@ -144,9 +146,19 @@ class _TabPageState extends State<_TabPage> with AutomaticKeepAliveClientMixin {
     super.dispose();
   }
 
+  void _applyFontSize(double fontSize) {
+    if (fontSize == _lastAppliedFontSize) return;
+    _lastAppliedFontSize = fontSize;
+    widget.terminalKey.currentState?.setFontSize(fontSize.round());
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final fontSize = context.watch<SettingsService>().fontSize;
+    // Apply font size change (post-frame so we're not in build phase)
+    WidgetsBinding.instance.addPostFrameCallback((_) => _applyFontSize(fontSize));
+
     return TerminalWidget(
       key: widget.terminalKey,
       onReady: () {
@@ -154,6 +166,8 @@ class _TabPageState extends State<_TabPage> with AutomaticKeepAliveClientMixin {
         for (final chunk in widget.tab.scrollbackBuffer) {
           widget.terminalKey.currentState?.write(chunk);
         }
+        // Force fit + apply current font size so terminal isn't blank
+        _applyFontSize(fontSize);
         _outputSub = widget.tab.output.listen((data) {
           widget.terminalKey.currentState?.write(data);
         });

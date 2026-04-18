@@ -179,6 +179,9 @@
     window.addEventListener('load', () => {
       fitAddon.fit();
       sendReady();
+      // Re-fit after layout settles (WebView may have zero size during initial render)
+      setTimeout(() => fitAddon.fit(), 100);
+      setTimeout(() => fitAddon.fit(), 400);
     });
   </script>
 </body>
