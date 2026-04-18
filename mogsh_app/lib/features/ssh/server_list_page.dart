@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'models/server_profile.dart';
 import 'services/server_profile_service.dart';
+import 'services/ssh_key_manager.dart';
 import 'services/ssh_session.dart';
 import 'widgets/tmux_picker.dart';
 import '../terminal/tabs/tab_manager.dart';
@@ -199,6 +200,21 @@ class _AddServerSheetState extends State<_AddServerSheet> {
   final _pass   = TextEditingController();
   final _script = TextEditingController();
 
+  List<SshKeyEntry> _keys = [];
+  String? _selectedKeyId;
+
+  static const _green  = Color(0xFF00FF88);
+  static const _muted  = Color(0xFF666688);
+  static const _border = Color(0xFF2A2A3E);
+
+  @override
+  void initState() {
+    super.initState();
+    SshKeyManager.listAll().then((keys) {
+      if (mounted) setState(() => _keys = keys);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -207,7 +223,7 @@ class _AddServerSheetState extends State<_AddServerSheet> {
         padding: const EdgeInsets.all(20),
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('Add server',
-              style: TextStyle(color: Color(0xFF00FF88), fontFamily: 'monospace', fontSize: 16)),
+              style: TextStyle(color: _green, fontFamily: 'monospace', fontSize: 16)),
           const SizedBox(height: 16),
           _field(_label, 'Label', 'My VPS'),
           _field(_host,  'Host',  '1.2.3.4'),
@@ -216,7 +232,38 @@ class _AddServerSheetState extends State<_AddServerSheet> {
             const SizedBox(width: 8),
             SizedBox(width: 80, child: _field(_port, 'Port', '22', keyboard: TextInputType.number)),
           ]),
-          _field(_pass,   'Password (optional)', '', obscure: true),
+          _field(_pass, 'Password (optional)', '', obscure: true),
+          const SizedBox(height: 4),
+          // SSH key picker
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+            decoration: const BoxDecoration(
+              border: Border(bottom: BorderSide(color: _border)),
+            ),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('SSH Key (optional)',
+                  style: TextStyle(color: _muted, fontSize: 12)),
+              const SizedBox(height: 6),
+              if (_keys.isEmpty)
+                const Text('No keys imported yet — go to Keys tab',
+                    style: TextStyle(color: Color(0xFF444466), fontFamily: 'monospace', fontSize: 11))
+              else
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    _KeyChip(label: 'none', selected: _selectedKeyId == null,
+                        onTap: () => setState(() => _selectedKeyId = null)),
+                    ..._keys.map((k) => _KeyChip(
+                      label: k.label,
+                      selected: _selectedKeyId == k.id,
+                      onTap: () => setState(() => _selectedKeyId = k.id),
+                    )),
+                  ],
+                ),
+            ]),
+          ),
+          const SizedBox(height: 10),
           _field(_script, 'Startup script (optional)', 'cd myproject'),
           const SizedBox(height: 16),
           SizedBox(
@@ -236,6 +283,7 @@ class _AddServerSheetState extends State<_AddServerSheet> {
                   username: _user.text.trim(),
                   port: int.tryParse(_port.text) ?? 22,
                   password: _pass.text.isEmpty ? null : _pass.text,
+                  keyId: _selectedKeyId,
                   startupScript: _script.text.isEmpty ? null : _script.text,
                 ));
                 Navigator.pop(context);
@@ -265,6 +313,37 @@ class _AddServerSheetState extends State<_AddServerSheet> {
           enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF2A2A3E))),
           focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF00FF88))),
         ),
+      ),
+    );
+  }
+}
+
+class _KeyChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _KeyChip({required this.label, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFF00D4FF).withValues(alpha: 0.15) : Colors.transparent,
+          border: Border.all(
+            color: selected ? const Color(0xFF00D4FF) : const Color(0xFF2A2A3E),
+          ),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(label,
+            style: TextStyle(
+              color: selected ? const Color(0xFF00D4FF) : const Color(0xFF666688),
+              fontFamily: 'monospace',
+              fontSize: 11,
+            )),
       ),
     );
   }
