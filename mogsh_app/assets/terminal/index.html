@@ -148,16 +148,20 @@
       setTimeout(() => term.focus(), 50);
     });
 
-    // Ready signal — try both on load and after short delay (WebView timing)
+    // Ready signal — send once, retry until FlutterChannel is available
+    let _readySent = false;
     function sendReady() {
+      if (_readySent) return;
       if (window.FlutterChannel) {
+        _readySent = true;
         window.FlutterChannel.postMessage(JSON.stringify({ type: 'ready' }));
+      } else {
+        setTimeout(sendReady, 50);
       }
     }
     window.addEventListener('load', () => {
       fitAddon.fit();
       sendReady();
-      setTimeout(sendReady, 500); // retry in case channel wasn't ready
     });
   </script>
 </body>

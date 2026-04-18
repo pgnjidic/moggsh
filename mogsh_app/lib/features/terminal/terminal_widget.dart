@@ -1,16 +1,16 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-/// Callback types
-typedef OnInputCallback = void Function(String data);
+typedef OnInputCallback  = void Function(String data);
 typedef OnResizeCallback = void Function(int cols, int rows);
-typedef OnReadyCallback = void Function();
+typedef OnReadyCallback  = void Function();
 
 class TerminalWidget extends StatefulWidget {
-  final OnInputCallback? onInput;
+  final OnInputCallback?  onInput;
   final OnResizeCallback? onResize;
-  final OnReadyCallback? onReady;
+  final OnReadyCallback?  onReady;
 
   const TerminalWidget({
     super.key,
@@ -27,73 +27,75 @@ class TerminalWidgetState extends State<TerminalWidget> {
   late final WebViewController _controller;
   bool _ready = false;
 
+  // Output batching — flush every 16ms instead of one runJavaScript per chunk
+  final StringBuffer _buf = StringBuffer();
+  Timer? _flushTimer;
+
   @override
   void initState() {
     super.initState();
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0xFF0A0A0F))
-      ..addJavaScriptChannel(
-        'FlutterChannel',
-        onMessageReceived: _onMessage,
-      )
+      ..addJavaScriptChannel('FlutterChannel', onMessageReceived: _onMessage)
       ..loadFlutterAsset('assets/terminal/index.html');
+  }
+
+  @override
+  void dispose() {
+    _flushTimer?.cancel();
+    super.dispose();
   }
 
   void _onMessage(JavaScriptMessage message) {
     try {
       final Map<String, dynamic> data = jsonDecode(message.message);
-      final type = data['type'] as String?;
-      switch (type) {
+      switch (data['type'] as String?) {
         case 'ready':
+          if (_ready) return; // guard against double-fire
           _ready = true;
           widget.onReady?.call();
         case 'input':
           widget.onInput?.call(data['data'] as String);
         case 'resize':
-          widget.onResize?.call(
-            data['cols'] as int,
-            data['rows'] as int,
-          );
+          widget.onResize?.call(data['cols'] as int, data['rows'] as int);
       }
     } catch (_) {}
   }
 
-  /// Write raw data/ANSI sequences to the terminal
+  /// Buffer data and flush in one JS call per frame (~16ms)
   void write(String data) {
     if (!_ready) return;
-    final escaped = data
-        .replaceAll('\\', '\\\\')
-        .replaceAll("'", "\\'")
-        .replaceAll('\r', '\\r')
-        .replaceAll('\n', '\\n');
-    _controller.runJavaScript("termWrite('$escaped')");
+    _buf.write(data);
+    _flushTimer ??= Timer(const Duration(milliseconds: 16), _flush);
   }
 
-  /// Write a line with newline
+  void _flush() {
+    _flushTimer = null;
+    if (_buf.isEmpty) return;
+    final chunk = _buf.toString();
+    _buf.clear();
+    // jsonEncode handles all special chars (\r \n \x1b quotes etc.) safely
+    _controller.runJavaScript('termWrite(${jsonEncode(chunk)})');
+  }
+
   void writeln(String data) => write('$data\r\n');
 
-  /// Clear the terminal
   void clear() {
     if (!_ready) return;
     _controller.runJavaScript('termClear()');
   }
 
-  /// Set font size (11–18px)
   void setFontSize(int size) {
     if (!_ready) return;
     _controller.runJavaScript('termSetFontSize($size)');
   }
 
-  /// Search terminal content
   void search(String query) {
     if (!_ready) return;
-    final escaped = query.replaceAll("'", "\\'");
-    _controller.runJavaScript("termSearch('$escaped')");
+    _controller.runJavaScript('termSearch(${jsonEncode(query)})');
   }
 
   @override
-  Widget build(BuildContext context) {
-    return WebViewWidget(controller: _controller);
-  }
+  Widget build(BuildContext context) => WebViewWidget(controller: _controller);
 }
