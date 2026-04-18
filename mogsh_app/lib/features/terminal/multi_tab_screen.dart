@@ -135,29 +135,38 @@ class _TabPage extends StatefulWidget {
 
 class _TabPageState extends State<_TabPage> with AutomaticKeepAliveClientMixin {
   StreamSubscription<String>? _outputSub;
-  double _lastAppliedFontSize = 0;
+  SettingsService? _settings;
 
   @override
   bool get wantKeepAlive => true;
 
   @override
-  void dispose() {
-    _outputSub?.cancel();
-    super.dispose();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final settings = Provider.of<SettingsService>(context, listen: false);
+    if (_settings != settings) {
+      _settings?.removeListener(_onSettingsChanged);
+      _settings = settings;
+      _settings!.addListener(_onSettingsChanged);
+    }
   }
 
-  void _applyFontSize(double fontSize) {
-    if (fontSize == _lastAppliedFontSize) return;
-    _lastAppliedFontSize = fontSize;
-    widget.terminalKey.currentState?.setFontSize(fontSize.round());
+  void _onSettingsChanged() {
+    widget.terminalKey.currentState?.setFontSize(
+      (_settings?.fontSize ?? 14.0).round(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _settings?.removeListener(_onSettingsChanged);
+    _outputSub?.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final fontSize = context.watch<SettingsService>().fontSize;
-    // Apply font size change (post-frame so we're not in build phase)
-    WidgetsBinding.instance.addPostFrameCallback((_) => _applyFontSize(fontSize));
 
     return TerminalWidget(
       key: widget.terminalKey,
@@ -166,8 +175,10 @@ class _TabPageState extends State<_TabPage> with AutomaticKeepAliveClientMixin {
         for (final chunk in widget.tab.scrollbackBuffer) {
           widget.terminalKey.currentState?.write(chunk);
         }
-        // Force fit + apply current font size so terminal isn't blank
-        _applyFontSize(fontSize);
+        // Always apply font size when terminal first becomes ready (also calls fitAddon.fit())
+        widget.terminalKey.currentState?.setFontSize(
+          (_settings?.fontSize ?? 14.0).round(),
+        );
         _outputSub = widget.tab.output.listen((data) {
           widget.terminalKey.currentState?.write(data);
         });

@@ -136,6 +136,8 @@
     window.termSetFontSize = (size) => {
       term.options.fontSize = Math.min(18, Math.max(11, size));
       fitAddon.fit();
+      // Re-fit after layout settles (WebView may not have final size yet)
+      setTimeout(() => fitAddon.fit(), 150);
     };
 
     // Flutter → JS: search
