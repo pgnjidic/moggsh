@@ -132,8 +132,16 @@ class _TabPage extends StatefulWidget {
 }
 
 class _TabPageState extends State<_TabPage> with AutomaticKeepAliveClientMixin {
+  StreamSubscription<String>? _outputSub;
+
   @override
   bool get wantKeepAlive => true;
+
+  @override
+  void dispose() {
+    _outputSub?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -141,10 +149,11 @@ class _TabPageState extends State<_TabPage> with AutomaticKeepAliveClientMixin {
     return TerminalWidget(
       key: widget.terminalKey,
       onReady: () {
+        _outputSub?.cancel();
         for (final chunk in widget.tab.scrollbackBuffer) {
           widget.terminalKey.currentState?.write(chunk);
         }
-        widget.tab.output.listen((data) {
+        _outputSub = widget.tab.output.listen((data) {
           widget.terminalKey.currentState?.write(data);
         });
       },
