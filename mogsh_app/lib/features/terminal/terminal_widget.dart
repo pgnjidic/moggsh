@@ -91,6 +91,11 @@ class TerminalWidgetState extends State<TerminalWidget> {
     _controller.runJavaScript('termSetFontSize($size)');
   }
 
+  void refresh() {
+    if (!_ready) return;
+    _controller.runJavaScript('termRefresh()');
+  }
+
   void search(String query) {
     if (!_ready) return;
     _controller.runJavaScript('termSearch(${jsonEncode(query)})');

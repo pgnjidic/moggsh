@@ -140,6 +140,12 @@
       setTimeout(() => fitAddon.fit(), 150);
     };
 
+    // Flutter → JS: force synchronous repaint (bypasses rAF throttle when WebView has no focus)
+    window.termRefresh = () => {
+      term.refresh(0, term.rows - 1);
+      term.focus();
+    };
+
     // Flutter → JS: search
     window.termSearch = (query) => searchAddon.findNext(query);
 

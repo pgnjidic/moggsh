@@ -182,6 +182,12 @@ class _TabPageState extends State<_TabPage> with AutomaticKeepAliveClientMixin {
         _outputSub = widget.tab.output.listen((data) {
           widget.terminalKey.currentState?.write(data);
         });
+        // Force synchronous repaint after the 16ms write-buffer flushes.
+        // Android WebView throttles requestAnimationFrame when unfocused, so
+        // xterm.js never paints the initial content without this nudge.
+        Future.delayed(const Duration(milliseconds: 50), () {
+          widget.terminalKey.currentState?.refresh();
+        });
       },
       onInput: widget.tab.sendInput,
       onResize: widget.tab.resize,
