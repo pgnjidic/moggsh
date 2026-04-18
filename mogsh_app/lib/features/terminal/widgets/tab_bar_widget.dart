@@ -31,13 +31,16 @@ class MogshTabBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 44,
-      color: AppColors.bgDark,
+      height: 46,
+      decoration: const BoxDecoration(
+        color: AppColors.bgDark,
+        border: Border(bottom: BorderSide(color: AppColors.border, width: 0.5)),
+      ),
       child: Row(children: [
         Expanded(
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
             itemCount: tabs.length,
             itemBuilder: (_, i) => _TabPill(
               tab: tabs[i],
@@ -105,49 +108,63 @@ class _TabPill extends StatelessWidget {
       onTap: onTap,
       onLongPress: onLongPress,
       child: Container(
-        constraints: const BoxConstraints(minWidth: 80, maxWidth: 160),
+        constraints: const BoxConstraints(minWidth: 90, maxWidth: 180),
         margin: const EdgeInsets.only(right: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
         decoration: BoxDecoration(
           color: isActive
-              ? AppColors.green.withValues(alpha: 0.12)
+              ? AppColors.green.withValues(alpha: 0.14)
               : AppColors.surface2.withValues(alpha: 0.4),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isActive
-                ? AppColors.green.withValues(alpha: 0.35)
+                ? AppColors.green.withValues(alpha: 0.45)
                 : AppColors.border.withValues(alpha: 0.4),
           ),
+          boxShadow: isActive ? [
+            BoxShadow(color: AppColors.green.withValues(alpha: 0.12), blurRadius: 10),
+          ] : null,
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          // Status dot with glow when active
           Container(
             width: 6, height: 6,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: dotColor,
               boxShadow: isActive
-                  ? [BoxShadow(color: dotColor.withValues(alpha: 0.8), blurRadius: 5)]
+                  ? [BoxShadow(color: dotColor.withValues(alpha: 0.8), blurRadius: 6)]
                   : null,
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 7),
           Flexible(
             child: Text(tab.title,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: isActive ? AppColors.teal : AppColors.textMuted,
-                fontSize: 11,
+                fontSize: 12,
                 fontFamily: 'monospace',
                 fontWeight: isActive ? FontWeight.w500 : FontWeight.normal,
               ),
             ),
           ),
           const SizedBox(width: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+            decoration: BoxDecoration(
+              color: (isActive ? AppColors.green : AppColors.textMuted).withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(3),
+            ),
+            child: Text('CC', style: TextStyle(
+              color: isActive ? AppColors.green : AppColors.textMuted,
+              fontSize: 8, fontFamily: 'monospace', fontWeight: FontWeight.w600, letterSpacing: 0.3,
+            )),
+          ),
+          const SizedBox(width: 6),
           GestureDetector(
             onTap: onClose,
-            child: Icon(Icons.close, size: 11,
-                color: isActive ? AppColors.teal.withValues(alpha: 0.6) : AppColors.textMuted.withValues(alpha: 0.4)),
+            child: Icon(Icons.close, size: 12,
+                color: isActive ? AppColors.teal.withValues(alpha: 0.7) : AppColors.textMuted.withValues(alpha: 0.5)),
           ),
         ]),
       ),

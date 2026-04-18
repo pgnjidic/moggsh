@@ -138,12 +138,26 @@ class _ServerListPageState extends State<ServerListPage> {
   );
 
   Widget _buildList() {
+    final local = _profiles.where((p) =>
+      p.host == 'localhost' || p.host == '127.0.0.1' || p.host == '0.0.0.0'
+    ).toList();
+    final remote = _profiles.where((p) => !local.contains(p)).toList();
+
     return ListView(
       padding: const EdgeInsets.only(bottom: 16),
       children: [
+        if (local.isNotEmpty) ...[
+          _SectionHeader(label: 'LOCAL', color: AppColors.amber),
+          ...local.map((p) => _ServerTile(
+            profile: p, isLocal: true,
+            onTap: () => _connect(p),
+            onEdit: () => _showEditDialog(p),
+            onDelete: () async { await _service.delete(p.id); _load(); },
+          )),
+        ],
         _SectionHeader(label: 'SSH SERVERS', color: AppColors.blue),
-        ..._profiles.map((p) => _ServerTile(
-          profile: p,
+        ...remote.map((p) => _ServerTile(
+          profile: p, isLocal: false,
           onTap: () => _connect(p),
           onEdit: () => _showEditDialog(p),
           onDelete: () async { await _service.delete(p.id); _load(); },
@@ -169,25 +183,40 @@ class _SectionHeader extends StatelessWidget {
 
 class _ServerTile extends StatelessWidget {
   final ServerProfile profile;
+  final bool isLocal;
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
-  const _ServerTile({required this.profile, required this.onTap,
+  const _ServerTile({required this.profile, required this.isLocal, required this.onTap,
       required this.onEdit, required this.onDelete});
 
-  Color get _dotColor {
-    if (profile.lastConnected == null) return AppColors.textMuted;
+  (Color, bool) get _statusInfo {
+    if (profile.lastConnected == null) return (AppColors.textMuted, false);
     final age = DateTime.now().difference(profile.lastConnected!);
-    if (age.inMinutes < 30) return AppColors.green;
-    if (age.inHours < 24) return AppColors.blue;
-    return AppColors.textMuted;
+    if (age.inMinutes < 30) return (AppColors.green, true);
+    if (age.inHours < 24) return (AppColors.blue, false);
+    return (AppColors.textMuted, false);
+  }
+
+  String get _statusSubtitle {
+    if (profile.lastConnected == null) return 'idle';
+    final age = DateTime.now().difference(profile.lastConnected!);
+    if (age.inMinutes < 30) return 'connected';
+    if (age.inHours < 24) return 'detached';
+    if (age.inDays < 7)  return 'idle · ${age.inDays}d';
+    return 'offline';
   }
 
   @override
   Widget build(BuildContext context) {
-    final dot = _dotColor;
-    final isActive = dot == AppColors.green;
+    final (dot, glow) = _statusInfo;
+    final iconColor = isLocal ? AppColors.green : AppColors.blue;
+    final iconBg = iconColor.withValues(alpha: 0.12);
+    final borderHi = glow ? AppColors.green.withValues(alpha: 0.3) : AppColors.border.withValues(alpha: 0.4);
+    final tileBg = glow
+        ? AppColors.green.withValues(alpha: 0.05)
+        : AppColors.surface2.withValues(alpha: 0.4);
 
     return GestureDetector(
       onTap: onTap,
@@ -195,56 +224,97 @@ class _ServerTile extends StatelessWidget {
         margin: const EdgeInsets.fromLTRB(12, 0, 12, 6),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: isActive
-              ? AppColors.green.withValues(alpha: 0.05)
-              : AppColors.surface2.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: isActive
-                ? AppColors.green.withValues(alpha: 0.2)
-                : AppColors.border.withValues(alpha: 0.5),
-          ),
+          color: tileBg,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: borderHi),
+          boxShadow: glow ? [
+            BoxShadow(color: AppColors.green.withValues(alpha: 0.1), blurRadius: 12),
+          ] : null,
         ),
         child: Row(children: [
           Container(
-            width: 32, height: 32,
+            width: 34, height: 34,
             decoration: BoxDecoration(
-              color: AppColors.blue.withValues(alpha: 0.1),
+              color: iconBg,
               borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: iconColor.withValues(alpha: 0.25)),
             ),
-            child: const Icon(Icons.dns_outlined, color: AppColors.blue, size: 16),
+            child: Icon(
+              isLocal ? Icons.phone_android_rounded : Icons.dns_outlined,
+              color: iconColor, size: 16,
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(profile.label, style: const TextStyle(color: AppColors.textPrimary,
-                fontFamily: 'monospace', fontSize: 12, fontWeight: FontWeight.w500)),
+            Row(children: [
+              Flexible(
+                child: Text(profile.label,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: AppColors.textPrimary,
+                      fontFamily: 'monospace', fontSize: 12.5, fontWeight: FontWeight.w500)),
+              ),
+              if (profile.startupScript?.contains('claude') == true)
+                const Padding(
+                  padding: EdgeInsets.only(left: 5),
+                  child: _AgentBadge(label: 'CC', color: AppColors.green),
+                ),
+              if (profile.startupScript?.contains('codex') == true)
+                const Padding(
+                  padding: EdgeInsets.only(left: 4),
+                  child: _AgentBadge(label: 'Codex', color: AppColors.blue),
+                ),
+            ]),
             const SizedBox(height: 2),
-            Text('${profile.username}@${profile.host}',
-                style: const TextStyle(color: AppColors.textMuted, fontFamily: 'monospace', fontSize: 10)),
+            Text(
+              isLocal
+                ? _statusSubtitle
+                : '${profile.username}@${profile.host} · $_statusSubtitle',
+              style: TextStyle(
+                color: glow ? AppColors.green.withValues(alpha: 0.8) : AppColors.textMuted,
+                fontFamily: 'monospace', fontSize: 10,
+              ),
+            ),
           ])),
-          // Status dot
           Container(
             width: 7, height: 7,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: dot,
-              boxShadow: isActive ? [BoxShadow(color: dot.withValues(alpha: 0.7), blurRadius: 6)] : null,
+              boxShadow: glow ? [BoxShadow(color: dot.withValues(alpha: 0.7), blurRadius: 6)] : null,
             ),
           ),
           const SizedBox(width: 8),
-          // Actions
           GestureDetector(onTap: onEdit,
               child: const Padding(padding: EdgeInsets.all(4),
                   child: Icon(Icons.edit_outlined, color: AppColors.textMuted, size: 14))),
           GestureDetector(onTap: onDelete,
               child: const Padding(padding: EdgeInsets.all(4),
                   child: Icon(Icons.delete_outline, color: AppColors.textMuted, size: 14))),
-          const SizedBox(width: 2),
-          const Icon(Icons.chevron_right, color: AppColors.teal, size: 16),
+          Icon(Icons.chevron_right,
+              color: glow ? AppColors.teal.withValues(alpha: 0.5) : AppColors.teal.withValues(alpha: 0.2),
+              size: 16),
         ]),
       ),
     );
   }
+}
+
+class _AgentBadge extends StatelessWidget {
+  final String label;
+  final Color color;
+  const _AgentBadge({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: 0.2),
+      borderRadius: BorderRadius.circular(3),
+    ),
+    child: Text(label, style: TextStyle(
+      color: color, fontSize: 8, fontFamily: 'monospace', fontWeight: FontWeight.w600, letterSpacing: 0.3,
+    )),
+  );
 }
 
 // ── Server add/edit sheet ──────────────────────────────────────────────────

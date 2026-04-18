@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_colors.dart';
+import '../services/voice_input_service.dart';
 
 class ShortcutBar extends StatefulWidget {
   final void Function(String) onSend;
@@ -39,9 +40,19 @@ class _ShortcutBarState extends State<ShortcutBar> {
   ];
 
   List<_Key> _snippets = [];
+  final _voice = VoiceInputService();
 
   @override
-  void initState() { super.initState(); _loadSnippets(); }
+  void initState() {
+    super.initState();
+    _loadSnippets();
+  }
+
+  @override
+  void dispose() {
+    _voice.dispose();
+    super.dispose();
+  }
 
   Future<void> _loadSnippets() async {
     final raw = await _storage.read(key: _storageKey);
@@ -63,36 +74,134 @@ class _ShortcutBarState extends State<ShortcutBar> {
     widget.onSend(data);
   }
 
+  Future<void> _toggleVoice() async {
+    HapticFeedback.mediumImpact();
+    if (_voice.state == VoiceState.listening) {
+      await _voice.stop();
+      return;
+    }
+    await _voice.start(onFinal: (text) {
+      if (text.trim().isEmpty) return;
+      widget.onSend(text);
+    });
+    if (_voice.state == VoiceState.error && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        duration: const Duration(seconds: 2),
+        backgroundColor: AppColors.surface2,
+        content: Text(
+          _voice.errorMessage ?? 'Microphone unavailable',
+          style: const TextStyle(color: AppColors.red, fontFamily: 'monospace', fontSize: 12),
+        ),
+      ));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.bgDark,
-      padding: const EdgeInsets.fromLTRB(4, 5, 4, 5),
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        // Row 1: ESC + F keys
-        SizedBox(
-          height: 28,
-          child: Row(children: [
-            Expanded(
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  ..._row1.map((k) => _KeyBtn(label: k.label, style: _keyStyle(k), onTap: () => _tap(k.data))),
-                  if (_snippets.isNotEmpty)
-                    ..._snippets.map((k) => _KeyBtn(label: k.label, style: _BtnStyle.snippet, onTap: () => _tap(k.data))),
-                ],
-              ),
+    return AnimatedBuilder(
+      animation: _voice,
+      builder: (_, _) {
+        final listening = _voice.state == VoiceState.listening;
+        return Container(
+          decoration: const BoxDecoration(
+            color: AppColors.bgDark,
+            border: Border(top: BorderSide(color: AppColors.border, width: 0.5)),
+          ),
+          padding: const EdgeInsets.fromLTRB(6, 6, 6, 6),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            if (listening || _voice.transcript.isNotEmpty) _voiceTranscriptBar(),
+            // Row 1: ESC + F keys
+            SizedBox(
+              height: 30,
+              child: Row(children: [
+                Expanded(
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      ..._row1.map((k) => _KeyBtn(label: k.label, style: _keyStyle(k), onTap: () => _tap(k.data))),
+                      if (_snippets.isNotEmpty)
+                        ..._snippets.map((k) => _KeyBtn(label: k.label, style: _BtnStyle.snippet, onTap: () => _tap(k.data))),
+                    ],
+                  ),
+                ),
+                _IconBtn(icon: Icons.tune, onTap: _showSnippetManager),
+              ]),
             ),
-            _IconBtn(icon: Icons.tune, onTap: _showSnippetManager),
+            const SizedBox(height: 6),
+            // Row 2: left keys + voice + right keys
+            SizedBox(
+              height: 44,
+              child: Row(children: [
+                Expanded(
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: _row2.take(4).map((k) =>
+                      _KeyBtn(label: k.label, style: _keyStyle(k), onTap: () => _tap(k.data))).toList(),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                _VoiceBtn(
+                  listening: listening,
+                  error: _voice.state == VoiceState.error,
+                  level: _voice.level,
+                  onTap: _toggleVoice,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: _row2.skip(4).map((k) =>
+                      _KeyBtn(label: k.label, style: _keyStyle(k), onTap: () => _tap(k.data))).toList(),
+                  ),
+                ),
+              ]),
+            ),
           ]),
+        );
+      },
+    );
+  }
+
+  Widget _voiceTranscriptBar() {
+    final listening = _voice.state == VoiceState.listening;
+    final txt = _voice.transcript.isEmpty
+        ? 'Listening…'
+        : _voice.transcript;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.green.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.green.withValues(alpha: 0.3)),
+      ),
+      child: Row(children: [
+        Container(
+          width: 6, height: 6,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppColors.green,
+            boxShadow: listening
+                ? [BoxShadow(color: AppColors.green.withValues(alpha: 0.7), blurRadius: 6)]
+                : null,
+          ),
         ),
-        const SizedBox(height: 4),
-        // Row 2: Tab, Ctrl combos, arrows
-        SizedBox(
-          height: 28,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            children: _row2.map((k) => _KeyBtn(label: k.label, style: _keyStyle(k), onTap: () => _tap(k.data))).toList(),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            txt,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: AppColors.teal, fontSize: 11, fontFamily: 'monospace',
+            ),
+          ),
+        ),
+        GestureDetector(
+          onTap: () => _voice.cancel(),
+          child: const Padding(
+            padding: EdgeInsets.all(2),
+            child: Icon(Icons.close, size: 14, color: AppColors.textMuted),
           ),
         ),
       ]),
@@ -134,24 +243,66 @@ class _KeyBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, border, fg) = switch (style) {
-      _BtnStyle.esc     => (AppColors.green.withValues(alpha: 0.12), AppColors.green.withValues(alpha: 0.3), AppColors.teal),
-      _BtnStyle.ctrl    => (AppColors.amber.withValues(alpha: 0.1),  AppColors.amber.withValues(alpha: 0.25), AppColors.amber),
-      _BtnStyle.fn      => (AppColors.surface2.withValues(alpha: 0.6), AppColors.border.withValues(alpha: 0.4), AppColors.textMuted),
-      _BtnStyle.snippet => (AppColors.blue.withValues(alpha: 0.12), AppColors.blue.withValues(alpha: 0.3), AppColors.blue),
-      _BtnStyle.normal  => (AppColors.surface2.withValues(alpha: 0.5), AppColors.border.withValues(alpha: 0.4), AppColors.textMuted),
+      _BtnStyle.esc     => (AppColors.green.withValues(alpha: 0.14), AppColors.green.withValues(alpha: 0.35), AppColors.teal),
+      _BtnStyle.ctrl    => (AppColors.amber.withValues(alpha: 0.12), AppColors.amber.withValues(alpha: 0.3), AppColors.amber),
+      _BtnStyle.fn      => (const Color(0x12FFFFFF), const Color(0x1AFFFFFF), AppColors.textMuted),
+      _BtnStyle.snippet => (AppColors.blue.withValues(alpha: 0.14), AppColors.blue.withValues(alpha: 0.35), AppColors.blue),
+      _BtnStyle.normal  => (const Color(0x12FFFFFF), const Color(0x1AFFFFFF), AppColors.textMuted),
     };
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(right: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(6),
           border: Border.all(color: border),
         ),
+        alignment: Alignment.center,
         child: Text(label, style: TextStyle(color: fg, fontSize: 10, fontFamily: 'monospace')),
+      ),
+    );
+  }
+}
+
+class _VoiceBtn extends StatelessWidget {
+  final bool listening;
+  final bool error;
+  final double level;
+  final VoidCallback onTap;
+  const _VoiceBtn({required this.listening, required this.error, required this.level, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = error ? AppColors.red : AppColors.green;
+    final amplitude = level.clamp(0.0, 10.0) / 10.0;
+    final glow = listening ? (0.3 + amplitude * 0.5) : 0.2;
+    final borderAlpha = listening ? 0.9 : 0.55;
+    final fillOuter = listening ? 0.35 + amplitude * 0.2 : 0.22;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 80),
+        width: 44, height: 44,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(colors: [
+            color.withValues(alpha: fillOuter),
+            color.withValues(alpha: 0.06),
+          ]),
+          border: Border.all(color: color.withValues(alpha: borderAlpha), width: 2),
+          boxShadow: [
+            BoxShadow(color: color.withValues(alpha: glow), blurRadius: listening ? 18 : 10),
+          ],
+        ),
+        child: Icon(
+          listening ? Icons.stop_rounded : Icons.mic_rounded,
+          size: 20,
+          color: color,
+        ),
       ),
     );
   }
@@ -167,7 +318,7 @@ class _IconBtn extends StatelessWidget {
     onTap: onTap,
     child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Icon(icon, size: 15, color: AppColors.textMuted.withValues(alpha: 0.6)),
+      child: Icon(icon, size: 16, color: AppColors.textMuted.withValues(alpha: 0.7)),
     ),
   );
 }

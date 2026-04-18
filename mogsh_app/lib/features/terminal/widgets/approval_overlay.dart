@@ -78,41 +78,72 @@ class _ApprovalOverlayState extends State<ApprovalOverlay>
     return SlideTransition(
       position: _slide,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        color: AppColors.surface2,
-        child: Row(children: [
-          const Icon(Icons.help_outline, color: AppColors.warning, size: 16),
-          const SizedBox(width: 8),
-          const Expanded(
-            child: Text('Approval required',
-                style: TextStyle(color: AppColors.textSecondary,
-                    fontFamily: 'monospace', fontSize: 12)),
-          ),
-          _btn('  Y  ', AppColors.primary, () => _respond('y')),
-          const SizedBox(width: 8),
-          _btn('  N  ', AppColors.danger, () => _respond('n')),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: _dismiss,
-            child: const Icon(Icons.close, color: AppColors.textMuted, size: 16),
-          ),
+        margin: const EdgeInsets.fromLTRB(10, 6, 10, 0),
+        padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
+        decoration: BoxDecoration(
+          color: AppColors.amber.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.amber.withValues(alpha: 0.4)),
+          boxShadow: [
+            BoxShadow(color: AppColors.amber.withValues(alpha: 0.08), blurRadius: 16),
+          ],
+        ),
+        child: Column(children: [
+          Row(children: [
+            Icon(Icons.bolt_rounded, color: AppColors.amber,
+                size: 18, shadows: [Shadow(color: AppColors.amber.withValues(alpha: 0.6), blurRadius: 8)]),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Agent needs approval',
+                  style: TextStyle(color: AppColors.amber,
+                      fontFamily: 'monospace', fontSize: 11.5, fontWeight: FontWeight.w600,
+                      shadows: [Shadow(color: Color(0x80FFAA00), blurRadius: 4)])),
+                SizedBox(height: 2),
+                Text('Respond to the prompt below',
+                  style: TextStyle(color: Color(0xFFAA8840),
+                      fontFamily: 'monospace', fontSize: 10)),
+              ]),
+            ),
+            GestureDetector(
+              onTap: _dismiss,
+              child: const Padding(
+                padding: EdgeInsets.all(4),
+                child: Icon(Icons.close, color: AppColors.textMuted, size: 14),
+              ),
+            ),
+          ]),
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(child: _btn('Y', AppColors.green, () => _respond('y'), filled: true)),
+            const SizedBox(width: 8),
+            Expanded(child: _btn('N', AppColors.red, () => _respond('n'))),
+          ]),
         ]),
       ),
     );
   }
 
-  Widget _btn(String label, Color color, VoidCallback onTap) {
+  Widget _btn(String label, Color color, VoidCallback onTap, {bool filled = false}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        alignment: Alignment.center,
         decoration: BoxDecoration(
-          border: Border.all(color: color.withValues(alpha: 0.7)),
-          borderRadius: BorderRadius.circular(3),
+          color: filled ? color.withValues(alpha: 0.2) : color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withValues(alpha: filled ? 0.6 : 0.3)),
+          boxShadow: filled ? [
+            BoxShadow(color: color.withValues(alpha: 0.25), blurRadius: 12),
+          ] : null,
         ),
         child: Text(label,
-            style: TextStyle(color: color, fontFamily: 'monospace',
-                fontSize: 13, fontWeight: FontWeight.bold)),
+            style: TextStyle(
+              color: color,
+              fontFamily: 'monospace', fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 2,
+              shadows: filled ? [Shadow(color: color.withValues(alpha: 0.6), blurRadius: 6)] : null,
+            )),
       ),
     );
   }

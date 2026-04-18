@@ -77,16 +77,16 @@ class _BottomNav extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 54,
+          height: 58,
           child: Row(children: [
-            _NavItem(icon: Icons.terminal, label: 'Terminal', active: current == 0,
+            _NavItem(icon: Icons.terminal_rounded, label: 'Terminal', active: current == 0,
                 activeColor: AppColors.teal, onTap: () => onTap(0)),
-            _NavItem(icon: Icons.dns_outlined, label: 'Hosts', active: current == 1,
+            _NavItem(icon: Icons.dns_rounded, label: 'Hosts', active: current == 1,
                 activeColor: AppColors.blue, onTap: () => onTap(1)),
-            _NavItem(icon: Icons.vpn_key_outlined, label: 'Keys', active: current == 2,
-                activeColor: AppColors.blue, onTap: () => onTap(2)),
-            _NavItem(icon: Icons.tune, label: 'Settings', active: current == 3,
-                activeColor: AppColors.textMuted, onTap: () => onTap(3)),
+            _NavItem(icon: Icons.vpn_key_rounded, label: 'Keys', active: current == 2,
+                activeColor: AppColors.amber, onTap: () => onTap(2)),
+            _NavItem(icon: Icons.tune_rounded, label: 'Settings', active: current == 3,
+                activeColor: AppColors.green, onTap: () => onTap(3)),
           ]),
         ),
       ),
@@ -106,15 +106,20 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? activeColor : AppColors.textMuted.withValues(alpha: 0.5);
+    final color = active ? activeColor : AppColors.textMuted.withValues(alpha: 0.55);
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Icon(icon, color: color, size: 19),
+          Icon(icon, color: color, size: 20,
+              shadows: active ? [Shadow(color: color.withValues(alpha: 0.5), blurRadius: 8)] : null),
           const SizedBox(height: 3),
-          Text(label, style: TextStyle(color: color, fontSize: 9, fontFamily: 'monospace')),
+          Text(label, style: TextStyle(
+            color: color, fontSize: 9.5, fontFamily: 'monospace',
+            fontWeight: active ? FontWeight.w600 : FontWeight.normal,
+            letterSpacing: 0.3,
+          )),
         ]),
       ),
     );
