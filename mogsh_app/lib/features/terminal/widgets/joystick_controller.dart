@@ -38,7 +38,7 @@ class JoystickController extends StatelessWidget {
             const Spacer(),
             Center(child: voiceBtn),
             const Spacer(),
-            _ActionCluster(onSend: onSend, onOpenSnippets: onOpenSnippets),
+            _ActionCluster(onSend: onSend),
           ],
         ),
       ),
@@ -189,8 +189,7 @@ class _DPad extends StatelessWidget {
 
 class _ActionCluster extends StatelessWidget {
   final ValueChanged<String> onSend;
-  final VoidCallback onOpenSnippets;
-  const _ActionCluster({required this.onSend, required this.onOpenSnippets});
+  const _ActionCluster({required this.onSend});
 
   @override
   Widget build(BuildContext context) {
@@ -223,15 +222,6 @@ class _ActionCluster extends StatelessWidget {
             color: AppColors.teal,
             haptic: HapticFeedback.mediumImpact,
             onTap: () => onSend('\t'),
-          ),
-        ),
-        Positioned(
-          bottom: 0,
-          child: _JoystickBtn(
-            icon: Icons.menu_rounded,
-            color: AppColors.teal,
-            haptic: HapticFeedback.selectionClick,
-            onTap: onOpenSnippets,
           ),
         ),
       ]),
