@@ -225,12 +225,13 @@ class _TabPageState extends State<_TabPage> with AutomaticKeepAliveClientMixin {
           widget.terminalKey.currentState?.write(data);
           if (!_sawFirstData) {
             _sawFirstData = true;
-            // First SSH data arrived — canvas is drawn but needs a CSS repaint
-            // to become visible. termFit() calls term.focus() which adds the
-            // .focus CSS class, triggering Blink's repaint pipeline.
-            Future.delayed(const Duration(milliseconds: 50), () {
-              widget.terminalKey.currentState?.fit();
-            });
+            // Belt-and-suspenders: fire fit() at multiple points after first
+            // data so at least one lands after canvas is drawn AND term.rows>0.
+            for (final ms in [80, 250, 600]) {
+              Future.delayed(Duration(milliseconds: ms), () {
+                if (mounted) widget.terminalKey.currentState?.fit();
+              });
+            }
           }
         });
         // Force synchronous repaint after the 16ms write-buffer flushes.

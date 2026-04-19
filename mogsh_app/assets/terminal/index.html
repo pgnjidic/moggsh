@@ -181,11 +181,14 @@
     new ResizeObserver(() => window.termFit()).observe(document.getElementById('terminal'));
 
     // Flutter → JS: write data to terminal.
-    // Callback fires after xterm's parser processes the chunk; scrollToBottom
-    // keeps the viewport at the bottom, refresh forces a synchronous canvas draw.
+    // Callback fires after xterm parses the chunk. Refresh + focus here so
+    // the CSS .focus class change (added by term.focus) triggers Blink's
+    // repaint pipeline immediately after the canvas is drawn — no separate
+    // async trigger needed, no race with Future.delayed calls from Flutter.
     window.termWrite = (data) => term.write(data, () => {
       term.scrollToBottom();
       term.refresh(0, term.rows - 1);
+      term.focus();
     });
 
     // Flutter → JS: clear terminal
