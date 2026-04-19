@@ -195,18 +195,6 @@ class _TabPillState extends State<_TabPill> with SingleTickerProviderStateMixin 
               ),
             ),
           ),
-          const SizedBox(width: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-            decoration: BoxDecoration(
-              color: (widget.isActive ? AppColors.green : AppColors.textMuted).withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(3),
-            ),
-            child: Text('CC', style: TextStyle(
-              color: widget.isActive ? AppColors.green : AppColors.textMuted,
-              fontSize: 8, fontFamily: 'monospace', fontWeight: FontWeight.w600, letterSpacing: 0.3,
-            )),
-          ),
           const SizedBox(width: 4),
           GestureDetector(
             onTap: widget.onClose,
