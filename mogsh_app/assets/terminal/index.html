@@ -18,6 +18,12 @@
     /* xterm overrides */
     .xterm { height: 100% !important; }
     .xterm-viewport { overflow-y: auto !important; }
+    /* Force xterm's canvas onto its own GPU compositing layer so Android
+       WebView composites canvas draws immediately without a CSS repaint. */
+    #terminal canvas {
+      transform: translateZ(0);
+      will-change: transform;
+    }
   </style>
   <link rel="stylesheet" href="xterm.css">
 </head>
@@ -174,7 +180,10 @@
     // Flutter → JS: write data to terminal
     // Force refresh in the write callback — Android WebView throttles rAF when
     // the WebView is not focused, so term.write() alone never triggers a repaint.
-    window.termWrite = (data) => term.write(data, () => term.refresh(0, term.rows - 1));
+    window.termWrite = (data) => term.write(data, () => {
+      term.scrollToBottom();
+      term.refresh(0, term.rows - 1);
+    });
 
     // Flutter → JS: clear terminal
     window.termClear = () => term.clear();
