@@ -23,6 +23,7 @@
 </head>
 <body>
   <div id="terminal"></div>
+  <div id="_dbg" style="position:fixed;top:2px;right:2px;font-size:9px;font-family:monospace;color:#0f0;background:rgba(0,0,0,0.85);z-index:9999;padding:3px;pointer-events:none;white-space:pre;line-height:1.4"></div>
   <!-- Off-screen compositor-force element. Toggling its opacity each wake tick
        makes Chromium produce an actual EGL swap, bypassing rAF throttling.
        The element is invisible and has zero layout impact. -->
@@ -320,6 +321,23 @@
       setTimeout(() => fitAddon.fit(), 100);
       setTimeout(() => fitAddon.fit(), 400);
     });
+
+    // Debug overlay — remove after diagnosis
+    let _dbgWrites = 0, _dbgFlushes = 0;
+    const _dbgEl = document.getElementById('_dbg');
+    const _dbgTerm = document.getElementById('terminal');
+    const _origTermWrite = window.termWrite;
+    window.termWrite = (d) => { _dbgWrites++; _origTermWrite(d); };
+    const _origFlushRAF = _flushRAF;
+    // wrap _flushRAF to count calls (redefine after it's declared)
+    setInterval(() => {
+      if (!_dbgEl) return;
+      _dbgEl.textContent =
+        `cw:${_dbgTerm.clientWidth} ch:${_dbgTerm.clientHeight}\n` +
+        `rows:${term.rows} cols:${term.cols}\n` +
+        `writes:${_dbgWrites} raf_q:${_rafMap.size}\n` +
+        `wake:${_wakeTimer !== null ? 'ON' : 'off'}`;
+    }, 300);
   </script>
 </body>
 </html>
