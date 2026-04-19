@@ -146,6 +146,8 @@
     let currentScrollRow = 0;
     let velocityPxMs = 0;
     let inertiaRaf = null;
+    let isTouching = false;
+    let scrolledUp = false;
     // Ring buffer of recent touch points for stable velocity estimation
     const _th = []; // {y, t}
 
@@ -153,8 +155,14 @@
       if (inertiaRaf !== null) { cancelAnimationFrame(inertiaRaf); inertiaRaf = null; }
     }
 
+    function _atBottom() {
+      const b = term.buffer.active;
+      return b.viewportY + 1 >= b.length - term.rows;
+    }
+
     document.addEventListener('touchstart', (e) => {
       if (e.touches.length === 1) {
+        isTouching = true;
         cancelInertia();
         _th.length = 0;
         scrollStartY = e.touches[0].clientY;
@@ -177,6 +185,7 @@
     }, { passive: true });
 
     document.addEventListener('touchend', () => {
+      isTouching = false;
       if (scrollStartY === null) return;
       scrollStartY = null;
       // Velocity from oldest→newest point in the window (more stable than last-pair delta)
@@ -185,7 +194,10 @@
         const dt = b.t - a.t;
         if (dt > 0) velocityPxMs = (a.y - b.y) / dt;
       }
-      if (Math.abs(velocityPxMs) < 0.05) return;
+      if (Math.abs(velocityPxMs) < 0.05) {
+        scrolledUp = !_atBottom();
+        return;
+      }
       const rowH = term.options.fontSize * (term.options.lineHeight || 1.2);
       // DECEL per ms — equivalent to ~0.96 per 16ms frame, giving a long, silky glide
       const DECEL_PER_MS = Math.pow(0.96, 1 / 16);
@@ -194,7 +206,11 @@
         const dt = Math.min(now - lastT, 64); // cap spike frames
         lastT = now;
         velocityPxMs *= Math.pow(DECEL_PER_MS, dt);
-        if (Math.abs(velocityPxMs) < 0.008) { inertiaRaf = null; return; }
+        if (Math.abs(velocityPxMs) < 0.008) {
+          inertiaRaf = null;
+          scrolledUp = !_atBottom();
+          return;
+        }
         currentScrollRow += velocityPxMs * dt / rowH;
         term.scrollToLine(Math.round(currentScrollRow));
         inertiaRaf = requestAnimationFrame(step);
@@ -218,17 +234,17 @@
       if (_wakeTimer !== null) return;
       let n = 0;
       _wakeTimer = setInterval(() => {
+        if (++n >= 25) { _wakeStop(); return; }
+        // During touch the browser already runs rAF at full speed — skip the
+        // heavy flush/refresh path to avoid competing with the scroll gesture.
+        if (isTouching) return;
         // 1. Flush any rAF callbacks xterm scheduled (render-debouncer).
-        //    setInterval is NOT throttled, so this bypasses Chromium's rAF
-        //    throttling and forces xterm to actually draw to the canvas.
         _flushRAF();
         // 2. Nudge Chromium's compositor so it swaps the (now-drawn) canvas.
         _cfEl.style.opacity = (_cfTick++ & 1) ? '0' : '0.001';
-        try { fitAddon.fit(); } catch (_) {}
         if (term.rows > 0) term.refresh(0, term.rows - 1);
-        _flushRAF(); // flush the refresh rAF too
+        _flushRAF();
         term.focus();
-        if (++n >= 25) _wakeStop();
       }, 80);
     }
 
@@ -250,7 +266,11 @@
     // On first write start the wake interval so the screen becomes visible
     // regardless of which async path (focus, rAF, Flutter fit) arrives first.
     window.termWrite = (data) => term.write(data, () => {
-      term.scrollToBottom();
+      // Only auto-scroll to bottom when the user hasn't manually scrolled into
+      // history (scroll-lock). Prevents termWrite from fighting a scroll gesture.
+      if (!scrolledUp && !isTouching && inertiaRaf === null) {
+        term.scrollToBottom();
+      }
       _flushRAF(); // flush xterm's render-debouncer for this write
       if (term.rows > 0) term.refresh(0, term.rows - 1);
       _flushRAF();
