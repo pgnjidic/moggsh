@@ -154,6 +154,7 @@ class _TabPageState extends State<_TabPage> with AutomaticKeepAliveClientMixin {
   TabManager? _tabMgr;
   bool _wasActive = false;
   bool _sawConnected = false;
+  bool _sawFirstData = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -222,6 +223,15 @@ class _TabPageState extends State<_TabPage> with AutomaticKeepAliveClientMixin {
         );
         _outputSub = widget.tab.output.listen((data) {
           widget.terminalKey.currentState?.write(data);
+          if (!_sawFirstData) {
+            _sawFirstData = true;
+            // First SSH data arrived — canvas is drawn but needs a CSS repaint
+            // to become visible. termFit() calls term.focus() which adds the
+            // .focus CSS class, triggering Blink's repaint pipeline.
+            Future.delayed(const Duration(milliseconds: 50), () {
+              widget.terminalKey.currentState?.fit();
+            });
+          }
         });
         // Force synchronous repaint after the 16ms write-buffer flushes.
         // Android WebView throttles requestAnimationFrame when unfocused, so

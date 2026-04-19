@@ -18,15 +18,6 @@
     /* xterm overrides */
     .xterm { height: 100% !important; }
     .xterm-viewport { overflow-y: auto !important; }
-    /* Force xterm's canvas onto its own GPU compositing layer. */
-    #terminal canvas {
-      transform: translateZ(0);
-      will-change: transform;
-    }
-    /* Keyframe used to trigger Chromium compositor frames from JS.
-       opacity animation runs on the compositor thread — no user gesture
-       needed, not affected by rAF throttling. */
-    @keyframes _rp { to { opacity: 0.9999; } }
   </style>
   <link rel="stylesheet" href="xterm.css">
 </head>
@@ -189,28 +180,12 @@
     // Resize observer — use full termFit so size-from-zero transitions repaint
     new ResizeObserver(() => window.termFit()).observe(document.getElementById('terminal'));
 
-    // Flutter → JS: write data to terminal
-    // Force refresh in the write callback — Android WebView throttles rAF when
-    // the WebView is not focused, so term.write() alone never triggers a repaint.
-    // Force Chromium to emit a compositor frame after each write.
-    // A compositor-only CSS animation (opacity) runs on Chromium's compositor
-    // thread — no rAF, no user gesture required. When the frame is emitted,
-    // the canvas layer (already drawn by term.refresh) is included and
-    // appears on screen. Throttled so only one trigger is in-flight at once.
-    let _framePending = false;
-    function _forceFrame() {
-      if (_framePending) return;
-      _framePending = true;
-      const el = document.createElement('div');
-      el.style.cssText = 'position:fixed;top:-2px;left:0;width:1px;height:1px;animation:_rp 16ms forwards';
-      document.body.appendChild(el);
-      setTimeout(() => { try { el.remove(); } catch(_) {} _framePending = false; }, 60);
-    }
-
+    // Flutter → JS: write data to terminal.
+    // Callback fires after xterm's parser processes the chunk; scrollToBottom
+    // keeps the viewport at the bottom, refresh forces a synchronous canvas draw.
     window.termWrite = (data) => term.write(data, () => {
       term.scrollToBottom();
       term.refresh(0, term.rows - 1);
-      _forceFrame();
     });
 
     // Flutter → JS: clear terminal
