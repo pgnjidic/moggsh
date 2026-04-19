@@ -35,6 +35,13 @@ class _MultiTabScreenState extends State<MultiTabScreen> {
   GlobalKey<TerminalWidgetState> _keyFor(String tabId) =>
       _terminalKeys.putIfAbsent(tabId, () => GlobalKey<TerminalWidgetState>());
 
+  String? _seedFor(TerminalTab? tab) {
+    if (tab == null || tab.scrollbackBuffer.isEmpty) return null;
+    final joined = tab.scrollbackBuffer.join();
+    const max = 4000;
+    return joined.length <= max ? joined : joined.substring(joined.length - max);
+  }
+
   void _onSwitch(TabManager mgr, int index) {
     mgr.switchTo(index);
     _pageController.animateToPage(
@@ -93,6 +100,8 @@ class _MultiTabScreenState extends State<MultiTabScreen> {
                 ),
                 ShortcutBar(
                   onSend: (data) => mgr.activeTab?.sendInput(data),
+                  activeTabOutput: mgr.activeTab?.output,
+                  scrollbackSeed: _seedFor(mgr.activeTab),
                 ),
               ],
             ),
