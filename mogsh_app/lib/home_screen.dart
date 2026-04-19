@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import 'core/theme/app_colors.dart';
 import 'features/settings/settings_page.dart';
 import 'features/settings/settings_service.dart';
@@ -28,7 +29,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     _tabManager = TabManager();
-    _settings = SettingsService()..init();
+    _settings = SettingsService()..init().then((_) {
+      if (_settings.keepScreenOn) WakelockPlus.enable();
+    });
     WidgetsBinding.instance.addObserver(this);
     _tabManager.addListener(_onTabsChanged);
   }

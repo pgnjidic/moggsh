@@ -6,6 +6,7 @@ class SettingsService extends ChangeNotifier {
   Box? _box;
 
   double get fontSize => _box?.get('fontSize', defaultValue: 14.0) ?? 14.0;
+  bool get keepScreenOn => _box?.get('keepScreenOn', defaultValue: false) ?? false;
 
   Future<void> init() async {
     _box = await Hive.openBox(_boxName);

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../core/theme/app_colors.dart';
 import 'settings_service.dart';
 
@@ -23,6 +24,10 @@ class _SettingsPageState extends State<SettingsPage> {
           Expanded(child: ListView(children: [
             _section('Terminal'),
             _slider('Font size', s.fontSize, 11, 18, (v) => s.set('fontSize', v)),
+            _toggle('Keep screen on', s.keepScreenOn, (v) {
+              s.set('keepScreenOn', v);
+              WakelockPlus.toggle(enable: v);
+            }),
             _section('Account'),
             _action('Clear credentials', AppColors.danger, _confirmClear),
           ])),
