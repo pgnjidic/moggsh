@@ -38,7 +38,7 @@ class JoystickController extends StatelessWidget {
             const Spacer(),
             Center(child: voiceBtn),
             const Spacer(),
-            _ActionCluster(onSend: onSend),
+            _ActionCluster(onSend: onSend, onOpenSnippets: onOpenSnippets),
           ],
         ),
       ),
@@ -189,7 +189,8 @@ class _DPad extends StatelessWidget {
 
 class _ActionCluster extends StatelessWidget {
   final ValueChanged<String> onSend;
-  const _ActionCluster({required this.onSend});
+  final VoidCallback onOpenSnippets;
+  const _ActionCluster({required this.onSend, required this.onOpenSnippets});
 
   @override
   Widget build(BuildContext context) {
@@ -227,10 +228,10 @@ class _ActionCluster extends StatelessWidget {
         Positioned(
           bottom: 0,
           child: _JoystickBtn(
-            label: '/',
+            icon: Icons.menu_rounded,
             color: AppColors.teal,
             haptic: HapticFeedback.selectionClick,
-            onTap: () => onSend('/'),
+            onTap: onOpenSnippets,
           ),
         ),
       ]),
@@ -278,6 +279,27 @@ class _EssentialsStrip extends StatelessWidget {
             onTap: () => onSend('\x16'),
             expand: true,
           ),
+        ),
+        const SizedBox(width: 6),
+        _JoystickBtn(
+          label: '1',
+          color: AppColors.amber,
+          haptic: HapticFeedback.selectionClick,
+          onTap: () => onSend('1\r'),
+        ),
+        const SizedBox(width: 4),
+        _JoystickBtn(
+          label: '2',
+          color: AppColors.amber,
+          haptic: HapticFeedback.selectionClick,
+          onTap: () => onSend('2\r'),
+        ),
+        const SizedBox(width: 4),
+        _JoystickBtn(
+          label: '3',
+          color: AppColors.amber,
+          haptic: HapticFeedback.selectionClick,
+          onTap: () => onSend('3\r'),
         ),
         const SizedBox(width: 6),
         _JoystickBtn(

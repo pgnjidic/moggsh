@@ -6,25 +6,17 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../services/prompt_detector.dart';
 import '../services/voice_input_service.dart';
-import 'context_row.dart';
 import 'joystick_controller.dart';
 
-/// Composer that stitches together the three bands above the keyboard:
-/// optional voice-transcript bar, collapsible [ContextRow], and the
-/// [JoystickController]. Owns the [PromptDetector] lifecycle so context
-/// buttons reflect the currently active tab's output.
+/// Composer that stitches together the voice-transcript bar and
+/// [JoystickController].
 class ShortcutBar extends StatefulWidget {
   final void Function(String) onSend;
-  final Stream<String>? activeTabOutput;
-  final String? scrollbackSeed;
 
   const ShortcutBar({
     super.key,
     required this.onSend,
-    this.activeTabOutput,
-    this.scrollbackSeed,
   });
 
   @override
@@ -46,40 +38,18 @@ class _ShortcutBarState extends State<ShortcutBar> {
   ];
 
   final _voice = VoiceInputService();
-  final _detector = PromptDetector();
   List<_Snippet> _snippets = [];
 
   @override
   void initState() {
     super.initState();
     _loadSnippets();
-    _detector.addListener(_onDetectorChange);
-    if (widget.activeTabOutput != null) {
-      _detector.attach(widget.activeTabOutput!, seed: widget.scrollbackSeed);
-    }
-  }
-
-  @override
-  void didUpdateWidget(ShortcutBar oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.activeTabOutput != widget.activeTabOutput) {
-      _detector.detach();
-      if (widget.activeTabOutput != null) {
-        _detector.attach(widget.activeTabOutput!, seed: widget.scrollbackSeed);
-      }
-    }
   }
 
   @override
   void dispose() {
-    _detector.removeListener(_onDetectorChange);
-    _detector.dispose();
     _voice.dispose();
     super.dispose();
-  }
-
-  void _onDetectorChange() {
-    if (mounted) setState(() {});
   }
 
   Future<void> _loadSnippets() async {
@@ -177,11 +147,6 @@ class _ShortcutBarState extends State<ShortcutBar> {
           padding: EdgeInsets.fromLTRB(6, landscape ? 4 : 6, 6, landscape ? 4 : 6),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             if (listening || _voice.transcript.isNotEmpty) _voiceTranscriptBar(),
-            ContextRow(
-              ctx: _detector.current,
-              onSend: widget.onSend,
-              compact: landscape,
-            ),
             JoystickController(
               onSend: widget.onSend,
               landscape: landscape,
