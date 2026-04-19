@@ -116,10 +116,10 @@
     let scrollStartY = null;
     let scrollStartRow = 0;
     let currentScrollRow = 0;
-    let lastTouchY = 0;
-    let lastTouchTime = 0;
-    let velocityPxMs = 0; // px/ms, positive = scroll down (toward older output)
+    let velocityPxMs = 0;
     let inertiaRaf = null;
+    // Ring buffer of recent touch points for stable velocity estimation
+    const _th = []; // {y, t}
 
     function cancelInertia() {
       if (inertiaRaf !== null) { cancelAnimationFrame(inertiaRaf); inertiaRaf = null; }
@@ -128,22 +128,21 @@
     document.addEventListener('touchstart', (e) => {
       if (e.touches.length === 1) {
         cancelInertia();
+        _th.length = 0;
         scrollStartY = e.touches[0].clientY;
         scrollStartRow = term.buffer.active.viewportY;
         currentScrollRow = scrollStartRow;
-        lastTouchY = scrollStartY;
-        lastTouchTime = e.timeStamp;
         velocityPxMs = 0;
+        _th.push({ y: scrollStartY, t: e.timeStamp });
       }
     }, { passive: true });
 
     document.addEventListener('touchmove', (e) => {
       if (e.touches.length !== 1 || scrollStartY === null) return;
       const y = e.touches[0].clientY;
-      const dt = e.timeStamp - lastTouchTime;
-      if (dt > 0) velocityPxMs = (lastTouchY - y) / dt;
-      lastTouchY = y;
-      lastTouchTime = e.timeStamp;
+      _th.push({ y, t: e.timeStamp });
+      // Keep only last 80ms for velocity estimation
+      while (_th.length > 1 && e.timeStamp - _th[0].t > 80) _th.shift();
       const rowH = term.options.fontSize * (term.options.lineHeight || 1.2);
       currentScrollRow = scrollStartRow + (scrollStartY - y) / rowH;
       term.scrollToLine(Math.round(currentScrollRow));
@@ -152,13 +151,23 @@
     document.addEventListener('touchend', () => {
       if (scrollStartY === null) return;
       scrollStartY = null;
+      // Velocity from oldest→newest point in the window (more stable than last-pair delta)
+      if (_th.length >= 2) {
+        const a = _th[0], b = _th[_th.length - 1];
+        const dt = b.t - a.t;
+        if (dt > 0) velocityPxMs = (a.y - b.y) / dt;
+      }
       if (Math.abs(velocityPxMs) < 0.05) return;
       const rowH = term.options.fontSize * (term.options.lineHeight || 1.2);
-      const DECEL = 0.92; // friction per 16ms frame
-      function step() {
-        velocityPxMs *= DECEL;
-        if (Math.abs(velocityPxMs) < 0.01) { inertiaRaf = null; return; }
-        currentScrollRow += velocityPxMs * 16 / rowH;
+      // DECEL per ms — equivalent to ~0.96 per 16ms frame, giving a long, silky glide
+      const DECEL_PER_MS = Math.pow(0.96, 1 / 16);
+      let lastT = performance.now();
+      function step(now) {
+        const dt = Math.min(now - lastT, 64); // cap spike frames
+        lastT = now;
+        velocityPxMs *= Math.pow(DECEL_PER_MS, dt);
+        if (Math.abs(velocityPxMs) < 0.008) { inertiaRaf = null; return; }
+        currentScrollRow += velocityPxMs * dt / rowH;
         term.scrollToLine(Math.round(currentScrollRow));
         inertiaRaf = requestAnimationFrame(step);
       }
