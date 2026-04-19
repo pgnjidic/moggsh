@@ -114,10 +114,10 @@ class JoystickController extends StatelessWidget {
           width: 58,
         ),
         _JoystickBtn(
-          label: 'Ctrl+L',
+          label: 'Ctrl+V',
           color: AppColors.textMuted,
           haptic: HapticFeedback.mediumImpact,
-          onTap: () => onSend('\x0c'),
+          onTap: () => onSend('\x16'),
           width: 58,
         ),
         const Spacer(),
@@ -227,10 +227,10 @@ class _ActionCluster extends StatelessWidget {
         Positioned(
           bottom: 0,
           child: _JoystickBtn(
-            icon: Icons.keyboard_arrow_down_rounded,
+            label: '/',
             color: AppColors.teal,
             haptic: HapticFeedback.selectionClick,
-            onTap: () => onSend('\x1b[B'),
+            onTap: () => onSend('/'),
           ),
         ),
       ]),
@@ -272,10 +272,10 @@ class _EssentialsStrip extends StatelessWidget {
         const SizedBox(width: 6),
         Expanded(
           child: _JoystickBtn(
-            label: 'Ctrl+L',
+            label: 'Ctrl+V',
             color: AppColors.textMuted,
             haptic: HapticFeedback.mediumImpact,
-            onTap: () => onSend('\x0c'),
+            onTap: () => onSend('\x16'),
             expand: true,
           ),
         ),

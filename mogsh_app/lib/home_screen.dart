@@ -19,7 +19,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   static const _serviceChannel = MethodChannel('app.mogsh.terminal/service');
 
-  int _tab = 0;
+  int _tab = 1;
   late final TabManager _tabManager;
   late final SettingsService _settings;
   bool _serviceRunning = false;
@@ -46,6 +46,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void _onTabsChanged() {
     if (_tabManager.tabs.isEmpty && _serviceRunning) {
       _stopForeground();
+    }
+    if (_tabManager.tabs.isEmpty && _tab == 0) {
+      setState(() => _tab = 1);
     }
   }
 
