@@ -6,12 +6,6 @@ class SettingsService extends ChangeNotifier {
   Box? _box;
 
   double get fontSize => _box?.get('fontSize', defaultValue: 14.0) ?? 14.0;
-  bool get approvalMode => _box?.get('approvalMode', defaultValue: true) ?? true;
-  bool get analyticsEnabled => _box?.get('analyticsEnabled', defaultValue: true) ?? true;
-  bool get autoSwitch => _box?.get('autoSwitch', defaultValue: true) ?? true;
-  String get quietHoursStart => _box?.get('quietHoursStart', defaultValue: '23:00') ?? '23:00';
-  String get quietHoursEnd => _box?.get('quietHoursEnd', defaultValue: '07:00') ?? '07:00';
-  bool get landscapeSplit => _box?.get('landscapeSplit', defaultValue: true) ?? true;
 
   Future<void> init() async {
     _box = await Hive.openBox(_boxName);

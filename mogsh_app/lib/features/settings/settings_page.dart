@@ -23,15 +23,8 @@ class _SettingsPageState extends State<SettingsPage> {
           Expanded(child: ListView(children: [
             _section('Terminal'),
             _slider('Font size', s.fontSize, 11, 18, (v) => s.set('fontSize', v)),
-            _section('Features'),
-            _toggle('Quick approval (y/n)', s.approvalMode, (v) => s.set('approvalMode', v)),
-            _toggle('Auto-switch to waiting agent', s.autoSwitch, (v) => s.set('autoSwitch', v)),
-            _toggle('Landscape split pane', s.landscapeSplit, (v) => s.set('landscapeSplit', v)),
-            _section('Privacy'),
-            _toggle('Analytics & crash reporting', s.analyticsEnabled, (v) => s.set('analyticsEnabled', v)),
             _section('Account'),
             _action('Clear credentials', AppColors.danger, _confirmClear),
-            _action('Re-provision dev tools', AppColors.secondary, _reprovision),
           ])),
         ]),
       ),
@@ -115,13 +108,4 @@ class _SettingsPageState extends State<SettingsPage> {
     ),
   );
 
-  void _reprovision() {
-    // Triggers provisioning flow — clears done marker
-    s.set('reprovision_requested', true);
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('Re-provisioning on next terminal open',
-          style: TextStyle(fontFamily: 'monospace')),
-      backgroundColor: AppColors.surface2,
-    ));
-  }
 }
