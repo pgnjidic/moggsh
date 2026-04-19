@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'core/theme/app_colors.dart';
 import 'features/settings/settings_page.dart';
@@ -15,23 +16,62 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+  static const _serviceChannel = MethodChannel('app.mogsh.terminal/service');
+
   int _tab = 0;
   late final TabManager _tabManager;
   late final SettingsService _settings;
+  bool _serviceRunning = false;
 
   @override
   void initState() {
     super.initState();
     _tabManager = TabManager();
     _settings = SettingsService()..init();
+    WidgetsBinding.instance.addObserver(this);
+    _tabManager.addListener(_onTabsChanged);
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _tabManager.removeListener(_onTabsChanged);
+    _stopForeground();
     _tabManager.dispose();
     _settings.dispose();
     super.dispose();
+  }
+
+  void _onTabsChanged() {
+    if (_tabManager.tabs.isEmpty && _serviceRunning) {
+      _stopForeground();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused && _tabManager.tabs.isNotEmpty) {
+      _startForeground();
+    } else if (state == AppLifecycleState.resumed && _serviceRunning) {
+      _stopForeground();
+    }
+  }
+
+  Future<void> _startForeground() async {
+    if (_serviceRunning) return;
+    try {
+      await _serviceChannel.invokeMethod('startForeground');
+      _serviceRunning = true;
+    } catch (_) {}
+  }
+
+  Future<void> _stopForeground() async {
+    if (!_serviceRunning) return;
+    try {
+      await _serviceChannel.invokeMethod('stopForeground');
+      _serviceRunning = false;
+    } catch (_) {}
   }
 
   void switchToTerminal() => setState(() => _tab = 0);

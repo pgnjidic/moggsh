@@ -106,21 +106,57 @@
 
     document.addEventListener('touchend', () => { initialDistance = null; });
 
-    // Single-finger touch scroll (xterm doesn't handle touch natively on Android)
+    // Single-finger touch scroll with inertia
     let scrollStartY = null;
     let scrollStartRow = 0;
+    let currentScrollRow = 0;
+    let lastTouchY = 0;
+    let lastTouchTime = 0;
+    let velocityPxMs = 0; // px/ms, positive = scroll down (toward older output)
+    let inertiaRaf = null;
+
+    function cancelInertia() {
+      if (inertiaRaf !== null) { cancelAnimationFrame(inertiaRaf); inertiaRaf = null; }
+    }
+
     document.addEventListener('touchstart', (e) => {
       if (e.touches.length === 1) {
+        cancelInertia();
         scrollStartY = e.touches[0].clientY;
         scrollStartRow = term.buffer.active.viewportY;
+        currentScrollRow = scrollStartRow;
+        lastTouchY = scrollStartY;
+        lastTouchTime = e.timeStamp;
+        velocityPxMs = 0;
       }
     }, { passive: true });
+
     document.addEventListener('touchmove', (e) => {
-      if (e.touches.length === 1 && scrollStartY !== null) {
-        const dy = scrollStartY - e.touches[0].clientY;
-        const rows = Math.round(dy / (term.options.fontSize * term.options.lineHeight));
-        term.scrollToLine(scrollStartRow + rows);
+      if (e.touches.length !== 1 || scrollStartY === null) return;
+      const y = e.touches[0].clientY;
+      const dt = e.timeStamp - lastTouchTime;
+      if (dt > 0) velocityPxMs = (lastTouchY - y) / dt;
+      lastTouchY = y;
+      lastTouchTime = e.timeStamp;
+      const rowH = term.options.fontSize * (term.options.lineHeight || 1.2);
+      currentScrollRow = scrollStartRow + (scrollStartY - y) / rowH;
+      term.scrollToLine(Math.round(currentScrollRow));
+    }, { passive: true });
+
+    document.addEventListener('touchend', () => {
+      if (scrollStartY === null) return;
+      scrollStartY = null;
+      if (Math.abs(velocityPxMs) < 0.05) return;
+      const rowH = term.options.fontSize * (term.options.lineHeight || 1.2);
+      const DECEL = 0.92; // friction per 16ms frame
+      function step() {
+        velocityPxMs *= DECEL;
+        if (Math.abs(velocityPxMs) < 0.01) { inertiaRaf = null; return; }
+        currentScrollRow += velocityPxMs * 16 / rowH;
+        term.scrollToLine(Math.round(currentScrollRow));
+        inertiaRaf = requestAnimationFrame(step);
       }
+      inertiaRaf = requestAnimationFrame(step);
     }, { passive: true });
 
     // Flutter → JS: full fit + repaint + focus. Needed when WebView becomes
@@ -136,7 +172,9 @@
     new ResizeObserver(() => window.termFit()).observe(document.getElementById('terminal'));
 
     // Flutter → JS: write data to terminal
-    window.termWrite = (data) => term.write(data);
+    // Force refresh in the write callback — Android WebView throttles rAF when
+    // the WebView is not focused, so term.write() alone never triggers a repaint.
+    window.termWrite = (data) => term.write(data, () => term.refresh(0, term.rows - 1));
 
     // Flutter → JS: clear terminal
     window.termClear = () => term.clear();
