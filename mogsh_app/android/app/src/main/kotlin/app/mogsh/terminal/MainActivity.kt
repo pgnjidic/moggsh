@@ -32,9 +32,14 @@ class MainActivity : FlutterActivity() {
                         result.success(null)
                     }
                     "invalidateWebView" -> {
-                        // Force Android to mark the WebView surface dirty so the
-                        // compositor picks up pending canvas draws from Chromium.
-                        findWebViews(window.decorView).forEach { it.postInvalidate() }
+                        // Give the WebView Android view-focus so Chromium's renderer
+                        // receives a focus signal and stops throttling frames.
+                        // postInvalidate() alone only redraws the last compositor
+                        // frame — it doesn't produce a new one from Chromium.
+                        findWebViews(window.decorView).forEach { wv ->
+                            wv.requestFocus()
+                            wv.postInvalidate()
+                        }
                         result.success(null)
                     }
                     "getNativeLibDir" -> result.success(applicationInfo.nativeLibraryDir)

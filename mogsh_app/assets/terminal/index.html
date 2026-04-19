@@ -23,6 +23,10 @@
 </head>
 <body>
   <div id="terminal"></div>
+  <!-- Off-screen compositor-force element. Toggling its opacity each wake tick
+       makes Chromium produce an actual EGL swap, bypassing rAF throttling.
+       The element is invisible and has zero layout impact. -->
+  <div id="_cf" style="position:fixed;top:-2px;left:-2px;width:1px;height:1px;pointer-events:none;opacity:0"></div>
 
   <script src="xterm.js"></script>
   <script src="xterm-addon-fit.js"></script>
@@ -168,18 +172,24 @@
       inertiaRaf = requestAnimationFrame(step);
     }, { passive: true });
 
-    // Repeatedly call fit+refresh+focus until the terminal renders visibly.
-    // setInterval is not affected by rAF throttling or user-gesture restrictions,
-    // so at least one of these calls will land after the canvas has content.
-    // Stops automatically after 2 s (25 × 80 ms) or when _wakeStop() is called.
+    // Compositor-force loop: toggling opacity on a tiny off-screen composited
+    // element makes Chromium produce an EGL swap each tick, bypassing rAF
+    // throttling. Android Chromium throttles rAF when no user gesture has
+    // occurred, so term.refresh() alone (which uses rAF internally) never
+    // flushes the canvas to the screen. The opacity toggle is the nudge.
+    const _cfEl = document.getElementById('_cf');
+    let _cfTick = 0;
     let _wakeTimer = null;
     function _wakeStop() {
       if (_wakeTimer !== null) { clearInterval(_wakeTimer); _wakeTimer = null; }
+      _cfEl.style.opacity = '0';
     }
     function _wakeStart() {
       if (_wakeTimer !== null) return;
       let n = 0;
       _wakeTimer = setInterval(() => {
+        // Nudge compositor — force a real EGL swap this tick.
+        _cfEl.style.opacity = (_cfTick++ & 1) ? '0' : '0.001';
         try { fitAddon.fit(); } catch (_) {}
         if (term.rows > 0) term.refresh(0, term.rows - 1);
         term.focus();
