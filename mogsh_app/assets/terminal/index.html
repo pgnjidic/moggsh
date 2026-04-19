@@ -34,6 +34,36 @@
   <script src="xterm-addon-search.js"></script>
 
   <script>
+    // Intercept requestAnimationFrame BEFORE xterm loads so we can flush its
+    // render-debouncer callbacks manually from setInterval.
+    // Android Chromium throttles rAF when no user gesture has occurred, so
+    // xterm's internal canvas renderer never fires — leaving the canvas blank
+    // even though the cursor (CSS animation) is visible.
+    const _rafMap = new Map(); // ourId → { cb, nid }
+    let _rafNextId = 1;
+    const _nativeRAF = window.requestAnimationFrame.bind(window);
+    const _nativeCAF = window.cancelAnimationFrame.bind(window);
+    window.requestAnimationFrame = function(cb) {
+      const id = _rafNextId++;
+      const nid = _nativeRAF((ts) => { _rafMap.delete(id); cb(ts); });
+      _rafMap.set(id, { cb, nid });
+      return id;
+    };
+    window.cancelAnimationFrame = function(id) {
+      const e = _rafMap.get(id);
+      if (e) { _rafMap.delete(id); _nativeCAF(e.nid); }
+      else _nativeCAF(id);
+    };
+    function _flushRAF() {
+      if (_rafMap.size === 0) return;
+      const ts = performance.now();
+      for (const [id, e] of _rafMap) {
+        _rafMap.delete(id);
+        _nativeCAF(e.nid);
+        try { e.cb(ts); } catch (_) {}
+      }
+    }
+
     const term = new Terminal({
       fontFamily: 'JetBrainsMono, "JetBrains Mono", "Courier New", monospace',
       fontSize: 14,
@@ -188,10 +218,15 @@
       if (_wakeTimer !== null) return;
       let n = 0;
       _wakeTimer = setInterval(() => {
-        // Nudge compositor — force a real EGL swap this tick.
+        // 1. Flush any rAF callbacks xterm scheduled (render-debouncer).
+        //    setInterval is NOT throttled, so this bypasses Chromium's rAF
+        //    throttling and forces xterm to actually draw to the canvas.
+        _flushRAF();
+        // 2. Nudge Chromium's compositor so it swaps the (now-drawn) canvas.
         _cfEl.style.opacity = (_cfTick++ & 1) ? '0' : '0.001';
         try { fitAddon.fit(); } catch (_) {}
         if (term.rows > 0) term.refresh(0, term.rows - 1);
+        _flushRAF(); // flush the refresh rAF too
         term.focus();
         if (++n >= 25) _wakeStop();
       }, 80);
@@ -202,7 +237,9 @@
     // and fit alone does not force a redraw of the internal framebuffer.
     window.termFit = () => {
       try { fitAddon.fit(); } catch (_) {}
+      _flushRAF();
       term.refresh(0, Math.max(term.rows - 1, 0));
+      _flushRAF();
       term.focus();
     };
 
@@ -214,7 +251,9 @@
     // regardless of which async path (focus, rAF, Flutter fit) arrives first.
     window.termWrite = (data) => term.write(data, () => {
       term.scrollToBottom();
+      _flushRAF(); // flush xterm's render-debouncer for this write
       if (term.rows > 0) term.refresh(0, term.rows - 1);
+      _flushRAF();
       term.focus();
       _wakeStart();
     });
