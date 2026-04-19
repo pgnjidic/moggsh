@@ -28,6 +28,19 @@ class SshSession {
   Stream<SshConnectionState> get stateChanges => _stateController.stream;
   Stream<String> get fingerprintWarning => _fingerprintController.stream;
 
+  // Pre-buffer: captures all shell output from connection until the first
+  // TerminalTab subscriber attaches. SshSession uses a broadcast stream so
+  // data emitted before subscription is lost. startListening() drains this
+  // buffer into the tab's scrollbackBuffer so no output is missed.
+  final _preBuffer = <String>[];
+  bool _preBuffering = true;
+  static const _maxPreBuffer = 5000;
+  List<String> get preBuffer => List.unmodifiable(_preBuffer);
+  void consumePreBuffer() {
+    _preBuffer.clear();
+    _preBuffering = false;
+  }
+
   bool _autoReconnect = true;
   int _reconnectAttempts = 0;
   static const _maxReconnects = 5;
@@ -73,18 +86,22 @@ class SshSession {
         write('${profile.startupScript}\n');
       }
 
-      // Stream output
+      // Stream output — also feed pre-buffer until first subscriber attaches.
+      void emit(String data) {
+        if (_preBuffering) {
+          _preBuffer.add(data);
+          if (_preBuffer.length > _maxPreBuffer) _preBuffer.removeAt(0);
+        }
+        _outputController.add(data);
+      }
       _shell!.stdout
           .cast<List<int>>()
           .transform(const Utf8Decoder(allowMalformed: true) as StreamTransformer<List<int>, String>)
-          .listen(
-            _outputController.add,
-            onDone: _onDisconnected,
-          );
+          .listen(emit, onDone: _onDisconnected);
       _shell!.stderr
           .cast<List<int>>()
           .transform(const Utf8Decoder(allowMalformed: true) as StreamTransformer<List<int>, String>)
-          .listen(_outputController.add);
+          .listen(emit);
 
     } catch (e) {
       _lastError = e.toString();

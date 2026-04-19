@@ -29,6 +29,15 @@ class TerminalTab {
   });
 
   void startListening() {
+    // Drain data that arrived before this subscription (MOTD, initial prompt).
+    // SshSession buffers output from shell start; consuming it here ensures
+    // onReady() can replay it even if the UI wasn't ready during connection.
+    for (final chunk in session.preBuffer) {
+      scrollbackBuffer.add(chunk);
+      if (scrollbackBuffer.length > maxScrollback) scrollbackBuffer.removeAt(0);
+    }
+    session.consumePreBuffer();
+
     _outputSub = session.output.listen((data) {
       scrollbackBuffer.add(data);
       if (scrollbackBuffer.length > maxScrollback) scrollbackBuffer.removeAt(0);
