@@ -23,7 +23,6 @@
 </head>
 <body>
   <div id="terminal"></div>
-  <div id="_dbg" style="position:fixed;top:2px;right:2px;font-size:9px;font-family:monospace;color:#0f0;background:rgba(0,0,0,0.85);z-index:9999;padding:3px;pointer-events:none;white-space:pre;line-height:1.4"></div>
   <!-- Off-screen compositor-force element. Toggling its opacity each wake tick
        makes Chromium produce an actual EGL swap, bypassing rAF throttling.
        The element is invisible and has zero layout impact. -->
@@ -305,13 +304,10 @@
 
     // Ready signal — send once, retry until FlutterChannel is available
     let _readySent = false;
-    window._dbgRsSent = false;   // debug: did JS call sendReady successfully?
-    window._dbgDartReady = false; // debug: set to true by Dart when it receives ready
     function sendReady() {
       if (_readySent) return;
       if (window.FlutterChannel) {
         _readySent = true;
-        window._dbgRsSent = true;
         window.FlutterChannel.postMessage(JSON.stringify({ type: 'ready' }));
       } else {
         setTimeout(sendReady, 50);
@@ -325,21 +321,6 @@
       setTimeout(() => fitAddon.fit(), 400);
     });
 
-    // Debug overlay — remove after diagnosis
-    let _dbgWrites = 0;
-    const _dbgEl = document.getElementById('_dbg');
-    const _dbgTerm = document.getElementById('terminal');
-    const _origTermWrite = window.termWrite;
-    window.termWrite = (d) => { _dbgWrites++; _origTermWrite(d); };
-    setInterval(() => {
-      if (!_dbgEl) return;
-      _dbgEl.textContent =
-        `cw:${_dbgTerm.clientWidth} ch:${_dbgTerm.clientHeight}\n` +
-        `rows:${term.rows} cols:${term.cols}\n` +
-        `writes:${_dbgWrites} raf_q:${_rafMap.size}\n` +
-        `wake:${_wakeTimer !== null ? 'ON' : 'off'}\n` +
-        `rs:${window._dbgRsSent?'Y':'N'} dr:${window._dbgDartReady?'Y':'N'}`;
-    }, 300);
   </script>
 </body>
 </html>
