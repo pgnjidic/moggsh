@@ -54,6 +54,7 @@ class TerminalWidgetState extends State<TerminalWidget> {
         case 'ready':
           if (_ready) return; // guard against double-fire
           _ready = true;
+          _controller.runJavaScript('window._dbgDartReady = true'); // debug
           widget.onReady?.call();
         case 'input':
           widget.onInput?.call(data['data'] as String);
