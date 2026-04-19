@@ -1,11 +1,11 @@
 ---
 id: MOG-36
 title: Fix blank terminal on tab-visibility (post-login render)
-status: In Progress
+status: Done
 assignee:
   - '@pgnjidic'
 created_date: '2026-04-18 19:30'
-updated_date: '2026-04-18 20:02'
+updated_date: '2026-04-19 17:38'
 labels: []
 dependencies: []
 priority: high
@@ -29,7 +29,7 @@ Fix: add termFit() JS helper koji radi fit+refresh+focus, wire ga u ResizeObserv
 - [x] #4 lib/features/terminal/multi_tab_screen.dart _TabPageState: on TabManager activeIndex change, when this tab becomes active trigger postFrame fit() + delayed fit() at 200 ms
 - [x] #5 _TabPageState also triggers fit() 100 ms after SshConnectionState becomes connected for the first time
 - [x] #6 Existing 50 ms delayed refresh in onReady handler supplemented with additional fit() at 300 ms
-- [ ] #7 Manual smoke test: connect to fresh host and verify MOTD + prompt render immediately without tap; switch to Hosts tab and back \u2014 terminal stays painted; open second tab, swipe between \u2014 both render without tap
+- [x] #7 Manual smoke test: connect to fresh host and verify MOTD + prompt render immediately without tap; switch to Hosts tab and back \u2014 terminal stays painted; open second tab, swipe between \u2014 both render without tap
 - [x] #8 flutter analyze lib/ clean
 <!-- AC:END -->
 
@@ -58,16 +58,13 @@ Fix: add termFit() JS helper koji radi fit+refresh+focus, wire ga u ResizeObserv
 ## Final Summary
 
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
-Fixes blank terminal after SSH login / tab switch.
+Fixed blank terminal on initial SSH connection.
 
-Root cause: PageView builds the WebView lazily; while hidden, fitAddon.fit() measures 0×0 and xterm caches that geometry. When the page becomes visible, ResizeObserver only called fitAddon.fit() — never term.refresh() — so the stale framebuffer persisted until a tap forced a focus-driven repaint.
+Root cause: SshSession.output is a broadcast stream. _connect() calls listTmuxSessions() after the PTY shell opens, which takes 0.5-2 s. During that window the shell sends MOTD and initial prompt; nobody was subscribed yet so data was permanently lost. scrollbackBuffer stayed empty, onReady() replayed nothing, and terminal stayed blank until a keyboard-appear resize (→ SIGWINCH → shell redraw) produced new output.
 
-Changes:
-- assets/terminal/index.html: added window.termFit() (fit + refresh + focus) and wired it into ResizeObserver.
-- terminal_widget.dart: exposed fit() that invokes termFit() via runJavaScript.
-- multi_tab_screen.dart _TabPageState: listens to TabManager for active-tab transitions and triggers post-frame fit + 200 ms delayed fit; listens to session.stateChanges to fire a 100 ms fit on the first connected event; onReady now also fits at 300 ms in addition to the existing 50 ms refresh.
+Diagnosis via JS debug overlay: writes:0 persisted with rs:Y dr:Y, proving data never reached termWrite() — Dart-side delivery failure, not a rendering issue.
 
-Tests:
-- flutter analyze lib/ — clean.
-- AC #7 manual smoke test pending on-device verification.
+Fix: SshSession accumulates all PTY output in _preBuffer from shell open until consumePreBuffer() is called. TerminalTab.startListening() drains it into scrollbackBuffer before subscribing to live output, so onReady() always replays the full initial output.
+
+Files: ssh_session.dart, terminal_tab.dart. Debug overlay in index.html and terminal_widget.dart removed after fix.
 <!-- SECTION:FINAL_SUMMARY:END -->

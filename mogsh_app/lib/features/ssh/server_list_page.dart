@@ -310,16 +310,6 @@ class _ServerTile extends StatelessWidget {
                   style: const TextStyle(color: AppColors.textPrimary,
                       fontFamily: 'monospace', fontSize: 12.5, fontWeight: FontWeight.w500)),
               ),
-              if (profile.startupScript?.contains('claude') == true)
-                const Padding(
-                  padding: EdgeInsets.only(left: 5),
-                  child: _AgentBadge(label: 'CC', color: AppColors.green),
-                ),
-              if (profile.startupScript?.contains('codex') == true)
-                const Padding(
-                  padding: EdgeInsets.only(left: 4),
-                  child: _AgentBadge(label: 'Codex', color: AppColors.blue),
-                ),
             ]),
             const SizedBox(height: 2),
             Row(children: [
@@ -387,24 +377,6 @@ class _ServerTile extends StatelessWidget {
       ),
     );
   }
-}
-
-class _AgentBadge extends StatelessWidget {
-  final String label;
-  final Color color;
-  const _AgentBadge({required this.label, required this.color});
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-    decoration: BoxDecoration(
-      color: color.withValues(alpha: 0.2),
-      borderRadius: BorderRadius.circular(3),
-    ),
-    child: Text(label, style: TextStyle(
-      color: color, fontSize: 8, fontFamily: 'monospace', fontWeight: FontWeight.w600, letterSpacing: 0.3,
-    )),
-  );
 }
 
 // ── Server add/edit sheet ──────────────────────────────────────────────────
