@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../settings/settings_service.dart';
 import '../ssh/services/ssh_session.dart';
@@ -225,10 +226,13 @@ class _TabPageState extends State<_TabPage> with AutomaticKeepAliveClientMixin {
           widget.terminalKey.currentState?.write(data);
           if (!_sawFirstData) {
             _sawFirstData = true;
-            // Belt-and-suspenders: fire fit() at multiple points after first
-            // data so at least one lands after canvas is drawn AND term.rows>0.
-            for (final ms in [80, 250, 600]) {
+            // Ask Android to mark the WebView surface dirty — this forces the
+            // compositor to pick up pending Chromium canvas draws immediately,
+            // without requiring a real user touch event.
+            const _ch = MethodChannel('app.mogsh.terminal/service');
+            for (final ms in [50, 200, 500]) {
               Future.delayed(Duration(milliseconds: ms), () {
+                _ch.invokeMethod('invalidateWebView').catchError((_) {});
                 if (mounted) widget.terminalKey.currentState?.fit();
               });
             }
