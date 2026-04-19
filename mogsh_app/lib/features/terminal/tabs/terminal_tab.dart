@@ -55,13 +55,6 @@ class TerminalTab {
         case SshConnectionState.error:
           sessionState = SessionState.offline;
           _outputController.add('\r\n\x1b[31m[disconnected]\x1b[0m\r\n');
-          // Close tab only if still offline — reconnect transitions state to
-          // connecting before the 1200ms fires, so we skip the close.
-          Future.delayed(const Duration(milliseconds: 1200), () {
-            if (!_closedController.isClosed && sessionState == SessionState.offline) {
-              _closedController.add(null);
-            }
-          });
       }
     });
   }
