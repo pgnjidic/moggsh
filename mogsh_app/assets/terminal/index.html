@@ -168,6 +168,25 @@
       inertiaRaf = requestAnimationFrame(step);
     }, { passive: true });
 
+    // Repeatedly call fit+refresh+focus until the terminal renders visibly.
+    // setInterval is not affected by rAF throttling or user-gesture restrictions,
+    // so at least one of these calls will land after the canvas has content.
+    // Stops automatically after 2 s (25 × 80 ms) or when _wakeStop() is called.
+    let _wakeTimer = null;
+    function _wakeStop() {
+      if (_wakeTimer !== null) { clearInterval(_wakeTimer); _wakeTimer = null; }
+    }
+    function _wakeStart() {
+      if (_wakeTimer !== null) return;
+      let n = 0;
+      _wakeTimer = setInterval(() => {
+        try { fitAddon.fit(); } catch (_) {}
+        if (term.rows > 0) term.refresh(0, term.rows - 1);
+        term.focus();
+        if (++n >= 25) _wakeStop();
+      }, 80);
+    }
+
     // Flutter → JS: full fit + repaint + focus. Needed when WebView becomes
     // visible after being laid out at 0×0 — xterm caches the zero geometry
     // and fit alone does not force a redraw of the internal framebuffer.
@@ -181,14 +200,13 @@
     new ResizeObserver(() => window.termFit()).observe(document.getElementById('terminal'));
 
     // Flutter → JS: write data to terminal.
-    // Callback fires after xterm parses the chunk. Refresh + focus here so
-    // the CSS .focus class change (added by term.focus) triggers Blink's
-    // repaint pipeline immediately after the canvas is drawn — no separate
-    // async trigger needed, no race with Future.delayed calls from Flutter.
+    // On first write start the wake interval so the screen becomes visible
+    // regardless of which async path (focus, rAF, Flutter fit) arrives first.
     window.termWrite = (data) => term.write(data, () => {
       term.scrollToBottom();
-      term.refresh(0, term.rows - 1);
+      if (term.rows > 0) term.refresh(0, term.rows - 1);
       term.focus();
+      _wakeStart();
     });
 
     // Flutter → JS: clear terminal
