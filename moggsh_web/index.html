@@ -237,35 +237,35 @@
     .app-statusbar .time { color:var(--text-2); font-weight:700; }
     .app-statusbar .icons { display:flex; gap:4px; align-items:center; }
 
-    /* ── Tab bar ── */
+    /* ── Tab bar — bg #0A0E1A, border #1A2A2A */
     .app-tabbar {
-      background:#0D0D1A;
+      background:#0A0E1A;
       padding:6px 10px;
       display:flex; gap:6px; align-items:center;
-      border-bottom:1px solid rgba(0,255,136,.08);
+      border-bottom:.5px solid #1A2A2A;
       flex-shrink:0;
       overflow:hidden;
     }
     .app-tab {
       display:inline-flex; align-items:center; gap:5px;
-      background:#111125;
-      border:1px solid rgba(0,212,255,.25);
+      background:rgba(74,232,192,.07);
+      border:1px solid rgba(74,232,192,.35);
       border-radius:999px;
-      padding:3px 8px 3px 6px;
-      font-size:9px; color:var(--text);
+      padding:4px 9px 4px 7px;
+      font-size:9px; color:#C0D8D0;
       white-space:nowrap;
     }
-    .tab-dot { width:6px; height:6px; background:var(--green); border-radius:50%; }
+    .tab-dot { width:7px; height:7px; background:#00FFAA; border-radius:50%; }
     .tab-badge {
-      background:rgba(0,212,255,.15); color:var(--cyan);
-      font-size:7px; font-weight:700; padding:1px 4px;
-      border-radius:3px; letter-spacing:.05em;
+      background:rgba(74,232,192,.18); color:#4AE8C0;
+      font-size:7px; font-weight:700; padding:1px 5px;
+      border-radius:4px; letter-spacing:.05em;
     }
     .tab-close {
-      width:10px; height:10px; border-radius:50%;
+      width:11px; height:11px; border-radius:50%;
       background:rgba(255,255,255,.1);
       display:flex; align-items:center; justify-content:center;
-      font-size:7px; color:var(--text-3); margin-left:2px;
+      font-size:7px; color:#4A6A60; margin-left:2px;
     }
 
     /* ── Terminal output ── */
@@ -280,16 +280,6 @@
       padding:7px 8px;
       font-size:10px; line-height:1.75;
       overflow:hidden;
-    }
-    /* stats overlay — matches the debug panel in the screenshot */
-    .term-stats {
-      width:84px; flex-shrink:0;
-      background:rgba(0,0,0,.55);
-      border-left:1px solid rgba(0,212,255,.1);
-      padding:6px 7px;
-      font-size:8.5px; line-height:1.9;
-      color:rgba(0,212,255,.6);
-      font-family:var(--font);
     }
     .tc { color:var(--green); }
     .to { color:#e8f0ec; }
@@ -306,111 +296,89 @@
 
     /* ── Joystick bar ── */
     .app-joystick {
-      background:#0C0C1A;
-      border-top:1px solid rgba(0,255,136,.08);
-      padding:10px 10px 6px;
+      background:#0A0E1A;
+      border-top:.5px solid #1A2A2A;
+      padding:6px 8px 5px;
       flex-shrink:0;
     }
-
     .joystick-row1 {
       display:flex; align-items:center; justify-content:space-between;
-      margin-bottom:7px;
+      margin-bottom:5px;
     }
 
-    /* D-pad */
+    /* D-pad — absolute positioned cross, 28×28 buttons, 4px gaps */
     .dpad {
-      display:grid;
-      grid-template-columns:repeat(3, 26px);
-      grid-template-rows:repeat(3, 26px);
-      gap:2px;
+      position:relative;
+      width:92px; height:92px; flex-shrink:0;
     }
     .dp-btn {
-      background:#111128;
-      border:1px solid rgba(0,255,136,.15);
-      border-radius:5px;
+      position:absolute;
+      width:28px; height:28px;
+      background:rgba(74,232,192,.12);
+      border:1.5px solid rgba(74,232,192,.48);
+      border-radius:9px;
       display:flex; align-items:center; justify-content:center;
-      font-size:11px; color:var(--green);
+      font-size:12px; color:#4AE8C0;
     }
-    .dp-center {
-      background:#0C0C1E;
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:5px;
-    }
-    .dp-empty { background:transparent; border:none; }
+    .dp-up    { top:0;   left:32px; }
+    .dp-left  { top:32px; left:0; }
+    .dp-right { top:32px; left:64px; }
+    .dp-down  { top:64px; left:32px; }
 
-    /* Mic button */
+    /* Mic — 50px, thin green ring, subtle inner glow */
     .mic-btn {
-      width:46px; height:46px; border-radius:50%;
-      background:var(--green);
+      width:50px; height:50px; border-radius:50%;
+      background:radial-gradient(circle, rgba(0,255,170,.22) 0%, rgba(0,255,170,.04) 70%);
+      border:2px solid rgba(0,255,170,.80);
       display:flex; align-items:center; justify-content:center;
-      font-size:18px;
-      box-shadow:0 0 20px rgba(0,255,136,.4), 0 0 40px rgba(0,255,136,.15);
+      font-size:20px;
+      box-shadow:0 0 10px rgba(0,255,170,.40), 0 0 22px rgba(0,255,170,.12);
     }
 
-    /* Right cluster */
+    /* Right cluster — 32×32 buttons, ↵ Esc / ↓ Tab */
     .right-cluster {
       display:grid;
-      grid-template-columns:repeat(2, 32px);
-      grid-template-rows:repeat(2, 26px);
+      grid-template-columns:repeat(2, 34px);
+      grid-template-rows:repeat(2, 30px);
       gap:4px;
     }
     .rc-btn {
-      border-radius:5px;
+      border-radius:9px;
       display:flex; align-items:center; justify-content:center;
-      font-size:9px; font-weight:700; font-family:var(--font);
+      font-size:9px; font-weight:600; font-family:var(--font);
     }
-    /* order: ↵ | Esc / Tab | ↓  (matches screenshot) */
-    .rc-back {
-      background:#0E2A2A; border:1px solid rgba(0,212,255,.3);
-      color:var(--cyan); font-size:13px;
-    }
-    .rc-esc {
-      background:#2A1A00; border:1px solid rgba(255,170,0,.4);
-      color:var(--amber);
-    }
-    .rc-tab {
-      background:#0E2A2A; border:1px solid rgba(0,212,255,.3);
-      color:var(--cyan);
-    }
-    .rc-down {
-      background:#0E2A2A; border:1px solid rgba(0,212,255,.3);
-      color:var(--cyan); font-size:11px;
-    }
+    .rc-back { background:rgba(0,255,170,.12);  border:1.5px solid rgba(0,255,170,.48);  color:#00FFAA; font-size:14px; }
+    .rc-esc  { background:rgba(180,80,0,.45);   border:1.5px solid rgba(255,140,0,.65);  color:#FFAA00; font-size:9px; }
+    .rc-down { background:rgba(74,232,192,.12); border:1.5px solid rgba(74,232,192,.48); color:#4AE8C0; font-size:13px; }
+    .rc-tab  { background:rgba(74,232,192,.12); border:1.5px solid rgba(74,232,192,.48); color:#4AE8C0; font-size:9px; }
 
     /* Ctrl row */
-    .ctrl-row {
-      display:flex; gap:4px;
-    }
+    .ctrl-row { display:flex; gap:4px; }
     .ctrl-btn {
-      flex:1; padding:5px 4px;
-      border-radius:6px;
-      font-size:9px; font-weight:700; font-family:var(--font);
-      text-align:center;
+      padding:6px 4px; border-radius:9px;
+      font-size:9px; font-weight:600; font-family:var(--font); text-align:center;
     }
-    .ctrl-c { background:#3A0808; border:1px solid rgba(255,68,68,.35); color:var(--red); }
-    .ctrl-d { background:#141428; border:1px solid rgba(255,255,255,.08); color:var(--text-2); }
-    .ctrl-l { background:#141428; border:1px solid rgba(255,255,255,.08); color:var(--text-2); }
-    .ctrl-cfg {
-      flex:0 0 32px;
-      background:#141428; border:1px solid rgba(255,255,255,.08);
-      color:var(--text-3); font-size:11px;
-    }
+    .ctrl-c   { flex:1.5; background:rgba(160,15,15,.70); border:1.5px solid rgba(255,68,68,.50);  color:#FF5555; }
+    .ctrl-d   { flex:1;   background:rgba(30,50,42,.70);  border:1.5px solid rgba(74,106,96,.38);  color:#4A7A68; }
+    .ctrl-l   { flex:1;   background:rgba(30,50,42,.70);  border:1.5px solid rgba(74,106,96,.38);  color:#4A7A68; }
+    .ctrl-cfg { flex:0 0 30px; background:rgba(30,50,42,.70); border:1.5px solid rgba(74,106,96,.38); color:#4A6A60; font-size:10px; }
 
-    /* ── Bottom nav ── */
+    /* Bottom nav */
     .app-nav {
-      background:#0A0A16;
-      border-top:1px solid rgba(255,255,255,.05);
+      background:#0A0E1A;
+      border-top:.5px solid #1A2A2A;
       padding:6px 0 8px;
       display:flex; flex-shrink:0;
     }
     .nav-item {
       flex:1; display:flex; flex-direction:column;
-      align-items:center; gap:3px;
-      font-size:8px; color:var(--text-3);
+      align-items:center; gap:2px;
+      font-size:8px; color:#3D5C52;
     }
-    .nav-item.active { color:var(--green); }
-    .nav-item .nav-icon { font-size:14px; }
-    .nav-item.active .nav-icon { text-shadow:0 0 12px rgba(0,255,136,.6); }
+    .nav-item.active { color:#00FFAA; }
+    .nav-item .nav-icon { font-size:14px; line-height:1; }
+    .nav-item.active .nav-icon { filter:drop-shadow(0 0 4px rgba(0,255,170,.8)); }
+    .nav-item.keys .nav-icon { color:#FFAA00; }
 
     /* ─── SECTION SHARED ───────────────────────────── */
     .sec-label {
@@ -813,34 +781,28 @@
             <div class="term-output">
               <div id="tlines"></div><span class="term-caret" id="tcaret"></span>
             </div>
-            <div class="term-stats">cw:393 ch:524<br>rows:28 cols:44<br>writes:1 raf_q:0<br>wake:off<br>rs:Y dr:Y</div>
           </div>
 
           <!-- joystick -->
           <div class="app-joystick">
             <div class="joystick-row1">
-              <!-- d-pad -->
+              <!-- d-pad: absolute cross -->
               <div class="dpad">
-                <div class="dp-empty"></div>
-                <div class="dp-btn">↑</div>
-                <div class="dp-empty"></div>
-                <div class="dp-btn">←</div>
-                <div class="dp-center"></div>
-                <div class="dp-btn">→</div>
-                <div class="dp-empty"></div>
-                <div class="dp-btn">↓</div>
-                <div class="dp-empty"></div>
+                <div class="dp-btn dp-up">↑</div>
+                <div class="dp-btn dp-left">←</div>
+                <div class="dp-btn dp-right">→</div>
+                <div class="dp-btn dp-down">↓</div>
               </div>
 
-              <!-- mic -->
+              <!-- mic: Icons.mic_rounded -->
               <div class="mic-btn">🎤</div>
 
-              <!-- right cluster: ↵ Esc / Tab ↓ -->
+              <!-- right cluster: ↵ Esc / ↓ Tab -->
               <div class="right-cluster">
                 <div class="rc-btn rc-back">↵</div>
                 <div class="rc-btn rc-esc">Esc</div>
-                <div class="rc-btn rc-tab">Tab</div>
                 <div class="rc-btn rc-down">↓</div>
+                <div class="rc-btn rc-tab">Tab</div>
               </div>
             </div>
 
@@ -856,19 +818,19 @@
           <!-- bottom nav -->
           <div class="app-nav">
             <div class="nav-item active">
-              <span class="nav-icon">⌨</span>
+              <span class="nav-icon" style="font-size:13px">⊡</span>
               <span>Terminal</span>
             </div>
             <div class="nav-item">
-              <span class="nav-icon">⊟</span>
+              <span class="nav-icon" style="font-size:12px">⊟</span>
               <span>Hosts</span>
             </div>
-            <div class="nav-item">
-              <span class="nav-icon">🔑</span>
+            <div class="nav-item keys">
+              <span class="nav-icon" style="font-size:13px">🗝</span>
               <span>Keys</span>
             </div>
             <div class="nav-item">
-              <span class="nav-icon">⚙</span>
+              <span class="nav-icon" style="font-size:12px">⚙</span>
               <span>Settings</span>
             </div>
           </div>
