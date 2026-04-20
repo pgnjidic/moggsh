@@ -118,10 +118,15 @@
     /* ─── HERO ─────────────────────────────────────── */
     #hero {
       min-height:100vh;
-      display:grid; grid-template-columns:1fr 1fr;
-      gap:48px; align-items:start;
-      padding:100px 48px 80px;
+      display:flex; align-items:center; justify-content:center;
+      padding:80px 48px;
       position:relative; overflow:hidden;
+    }
+
+    .hero-inner {
+      display:grid; grid-template-columns:1fr 1fr;
+      gap:64px; align-items:center;
+      width:100%; max-width:1280px;
     }
 
     /* grid bg */
@@ -203,7 +208,7 @@
 
     .phone-screenshot {
       display:block;
-      width:300px;
+      width:100%; max-width:360px;
       border-radius:36px;
       border:2px solid rgba(0,255,136,.2);
       box-shadow:
@@ -453,9 +458,8 @@
       nav { padding:14px 24px; }
       .nav-links { display:none; }
 
-      #hero {
-        grid-template-columns:1fr; padding:100px 24px 60px; text-align:center;
-      }
+      #hero { padding:100px 24px 60px; }
+      .hero-inner { grid-template-columns:1fr; text-align:center; }
       h1 { font-size:30px; }
       .hero-logo { font-size:40px; justify-content:center; }
       .hero-btns { justify-content:center; flex-direction:column; align-items:center; }
@@ -500,27 +504,29 @@
 
 <!-- ═══════════════════════════════ HERO ═══════════════════════════════ -->
 <section id="hero">
-  <div class="hero-left">
-    <div class="hero-badge">For Android · Free Forever · Open Source</div>
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="hero-badge">For Android · Free Forever · Open Source</div>
 
-    <h1>The SSH terminal<br>built for <em>vibe coding.</em></h1>
+      <h1>The SSH terminal<br>built for <em>vibe coding.</em></h1>
 
-    <p class="hero-sub">
-      Run commands on your VPS while Claude thinks.<br>
-      <strong>Joystick controls keep you in the zone.</strong> Mic input when your hands are full.
-      tmux reattach in one tap. No compromises.
-    </p>
+      <p class="hero-sub">
+        Run commands on your VPS while Claude thinks.<br>
+        <strong>Joystick controls keep you in the zone.</strong> Mic input when your hands are full.
+        tmux reattach in one tap. No compromises.
+      </p>
 
-    <div class="hero-btns">
-      <a href="#" class="btn-pill" style="font-size:13px;padding:13px 28px;">▶ Get on Google Play</a>
-      <span class="free-tag">Always free, no paywalls</span>
+      <div class="hero-btns">
+        <a href="#" class="btn-pill" style="font-size:13px;padding:13px 28px;">▶ Get on Google Play</a>
+        <span class="free-tag">Always free, no paywalls</span>
+      </div>
     </div>
-  </div>
 
-  <div class="hero-right">
-    <div class="phone-wrap">
-      <div class="phone-glow"></div>
-      <img class="phone-screenshot" src="screenshot.png" alt="moggsh SSH terminal on Android">
+    <div class="hero-right">
+      <div class="phone-wrap">
+        <div class="phone-glow"></div>
+        <img class="phone-screenshot" src="screenshot.png" alt="moggsh SSH terminal on Android">
+      </div>
     </div>
   </div>
 </section>
