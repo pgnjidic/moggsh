@@ -58,16 +58,20 @@ class _SplashScreenState extends State<SplashScreen>
           opacity: _fade,
           child: ScaleTransition(
             scale: _scale,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Image.asset(
-                  'assets/images/moggsh_logo_11.png',
-                  width: w * 0.52,
-                ),
-                const SizedBox(height: 28),
-                _WordMark(),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 48),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    'assets/images/moggsh_logo_11.png',
+                    width: w * 0.42,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(height: 28),
+                  _WordMark(),
+                ],
+              ),
             ),
           ),
         ),
