@@ -438,10 +438,10 @@ class _KeysPageState extends State<_KeysPage> {
       isScrollControlled: true,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
-      builder: (_) => Padding(
+      builder: (ctx) => Padding(
         padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16, top: 20, left: 16, right: 16),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 16, top: 20, left: 16, right: 16),
+        child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
           const Text('Import SSH Key',
               style: TextStyle(color: AppColors.green, fontSize: 15, fontFamily: 'monospace')),
           const SizedBox(height: 16),
@@ -493,7 +493,7 @@ class _KeysPageState extends State<_KeysPage> {
               child: const Text('Import', style: TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.w600)),
             ),
           ),
-        ]),
+        ]))),
       ),
     );
   }

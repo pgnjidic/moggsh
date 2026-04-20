@@ -52,7 +52,18 @@ class _ServerListPageState extends State<ServerListPage> {
     try {
       final session = SshSession(profile);
       await session.connect();
-      if (session.state != SshConnectionState.connected) return;
+      if (session.state != SshConnectionState.connected) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(
+              session.lastError ?? 'Connection failed',
+              style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+            ),
+            backgroundColor: AppColors.red,
+          ));
+        }
+        return;
+      }
       if (!mounted) return;
 
       final tmuxSessions = await session.listTmuxSessions();
