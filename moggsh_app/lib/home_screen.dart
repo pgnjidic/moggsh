@@ -493,7 +493,7 @@ class _KeysPageState extends State<_KeysPage> {
               child: const Text('Import', style: TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.w600)),
             ),
           ),
-        ]))),
+        ])),
       ),
     );
   }
