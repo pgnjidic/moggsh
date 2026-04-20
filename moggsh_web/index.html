@@ -238,10 +238,8 @@
 
     /* ─── VIBE SECTION ─────────────────────────────── */
     #vibe {
-      padding:120px 48px;
+      padding:100px 48px;
       background:var(--bg-1);
-      display:grid; grid-template-columns:1fr 1fr;
-      gap:80px; align-items:center;
       position:relative; overflow:hidden;
     }
     #vibe::before {
@@ -250,8 +248,11 @@
         rgba(0,255,136,.025) 0%, transparent 50%,
         rgba(0,212,255,.015) 100%);
     }
+    #vibe .vibe-text {
+      position:relative; z-index:1;
+      max-width:760px; margin:0 auto;
+    }
 
-    .vibe-text { position:relative; z-index:1; }
     .vibe-eyebrow {
       font-size:11px; color:var(--green); letter-spacing:.15em;
       text-transform:uppercase; margin-bottom:16px;
@@ -276,45 +277,6 @@
       content:'→'; color:var(--green); flex-shrink:0; margin-top:1px;
     }
 
-    /* ── Vibe interface mockup ── */
-    .vibe-mockup { position:relative; z-index:1; }
-
-    .ui-panel {
-      background:#0A0A16;
-      border:1px solid rgba(0,212,255,.14);
-      border-radius:20px;
-      overflow:hidden;
-      box-shadow:
-        0 0 80px rgba(0,212,255,.07),
-        0 0 40px rgba(0,255,136,.04),
-        0 24px 60px rgba(0,0,0,.6);
-    }
-
-    .ui-panel-bar {
-      background:#0D0D1E;
-      padding:10px 16px;
-      display:flex; align-items:center; gap:8px;
-      border-bottom:1px solid rgba(0,212,255,.08);
-      font-size:10px; color:var(--text-3);
-    }
-    .ui-panel-bar .live { color:var(--green); }
-    .ui-panel-dots { display:flex; gap:5px; }
-    .ui-panel-dot  { width:8px; height:8px; border-radius:50%; }
-
-    .ui-input-zone {
-      border-top:1px solid rgba(0,255,136,.1);
-      background:#0D0D1C;
-      padding:10px 16px;
-    }
-    .ui-input-label {
-      font-size:8px; text-transform:uppercase;
-      letter-spacing:.18em; color:var(--green); margin-bottom:8px;
-    }
-    .ui-input-line {
-      display:flex; align-items:center; gap:6px;
-      font-size:10px; color:var(--text);
-    }
-    .ui-input-line .p { color:var(--green); }
 
     /* ─── PROBLEMS ─────────────────────────────────── */
     #problems {
@@ -466,7 +428,7 @@
       .hero-sub { margin:0 auto 36px; }
       .hero-right { display:none; }
 
-      #vibe { grid-template-columns:1fr; gap:48px; padding:70px 24px; }
+      #vibe { padding:70px 24px; }
       #problems, #features, #free-banner { padding:70px 24px; }
       .prob-grid, .feat-grid { grid-template-columns:1fr; max-width:480px; margin:0 auto; }
 
@@ -538,10 +500,10 @@
     <h2 class="vibe-head">Your server.<br>Your AI.<br>Your phone.</h2>
     <p class="vibe-body">
       Vibe coding means long sessions — you and an AI, back and forth, building something real.
-      The problem: on Android, every SSH app collapses the moment you need to <strong>read output and type at the same time</strong>.
+      Claude generates code on your laptop. You SSH in from your phone to run it, check output, tweak, repeat.
     </p>
     <p class="vibe-body">
-      moggsh is designed specifically for this loop. Claude generates code on your laptop. You SSH in from your phone to run it, check output, tweak, repeat. The joystick keeps navigation instant. The mic keeps your hands free. tmux means nothing gets lost when you switch tabs.
+      moggsh is built for exactly this loop. The joystick keeps navigation instant. The mic keeps your hands free. tmux means nothing gets lost when you switch apps.
     </p>
     <ul class="vibe-list">
       <li>Joystick controls for arrow keys, Esc, Tab without switching keyboards</li>
@@ -549,35 +511,6 @@
       <li>tmux detection reattaches your session in one tap</li>
       <li>Background service keeps SSH alive when you switch apps</li>
     </ul>
-  </div>
-
-  <div class="vibe-mockup reveal d2">
-    <div class="ui-panel">
-      <div class="ui-panel-bar">
-        <div class="ui-panel-dots">
-          <div class="ui-panel-dot" style="background:#FF4444"></div>
-          <div class="ui-panel-dot" style="background:#FFAA00"></div>
-          <div class="ui-panel-dot" style="background:#00FF88"></div>
-        </div>
-        <span class="live" style="margin-left:8px">● hetzner</span>
-      </div>
-      <div style="padding:16px 20px;font-size:10.5px;line-height:1.9;">
-<pre style="color:var(--text-2);white-space:pre-wrap;"><span style="color:var(--green)">root@vps:~/app#</span> <span style="color:var(--text)">claude "fix login, returns 500 on wrong pass"</span>
-
-<span style="color:var(--text-3)">Reading src/auth.ts...</span>
-<span style="color:var(--cyan)">Found it — missing null check on user lookup.</span>
-<span style="color:var(--text-3)">Applying fix...</span>
-<span style="color:var(--green)">✓ Done. src/auth.ts updated.</span>
-
-<span style="color:var(--green)">root@vps:~/app#</span> <span style="color:var(--text)">npm test</span>
-
-<span style="color:var(--text-3)">  auth › login</span>
-<span style="color:var(--green)">  ✓ returns 401 on wrong password (12ms)</span>
-<span style="color:var(--green)">  ✓ returns 200 on valid credentials (9ms)</span>
-
-<span style="color:var(--green)">root@vps:~/app#</span> <span style="display:inline-block;width:7px;height:.85em;background:var(--green);vertical-align:text-bottom;animation:blink 1s step-end infinite;"></span></pre>
-      </div>
-    </div>
   </div>
 </section>
 
