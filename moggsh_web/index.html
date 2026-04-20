@@ -562,32 +562,20 @@
         <span class="live" style="margin-left:8px">● hetzner</span>
       </div>
       <div style="padding:16px 20px;font-size:10.5px;line-height:1.9;">
-<pre style="color:var(--text-2);white-space:pre-wrap;">Strictly Confined Kubernetes makes edge
-and IoT secure. <span style="color:var(--text-3)">...</span>
+<pre style="color:var(--text-2);white-space:pre-wrap;"><span style="color:var(--green)">root@vps:~/app#</span> <span style="color:var(--text)">claude "fix login, returns 500 on wrong pass"</span>
 
-<span style="color:var(--text-3)">60 updates can be applied immediately.</span>
-<span style="color:var(--amber)">7 security updates available.</span>
+<span style="color:var(--text-3)">Reading src/auth.ts...</span>
+<span style="color:var(--cyan)">Found it — missing null check on user lookup.</span>
+<span style="color:var(--text-3)">Applying fix...</span>
+<span style="color:var(--green)">✓ Done. src/auth.ts updated.</span>
 
-Last login: Mon Apr 20 17:18:33 2026
-from 94.253.182.109</pre>
-        <div style="margin-top:12px;background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.18);border-radius:10px;padding:12px 14px;">
-          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.15em;color:var(--cyan);margin-bottom:8px">tmux sessions found</div>
-          <div style="display:flex;flex-direction:column;gap:6px;">
-            <div style="display:flex;align-items:center;gap:8px;font-size:10px;">
-              <span style="color:var(--green);font-weight:700">[0]</span>
-              <span style="color:var(--text)">main</span>
-              <span style="margin-left:auto;background:rgba(0,255,136,.12);border:1px solid rgba(0,255,136,.3);color:var(--green);font-size:8px;padding:2px 8px;border-radius:999px;">▶ Reattach</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;font-size:10px;">
-              <span style="color:var(--text-3);font-weight:700">[1]</span>
-              <span style="color:var(--text-2)">agent-work</span>
-              <span style="margin-left:auto;background:rgba(74,106,96,.2);border:1px solid rgba(74,106,96,.3);color:var(--text-3);font-size:8px;padding:2px 8px;border-radius:999px;">Reattach</span>
-            </div>
-          </div>
-        </div>
-        <div style="margin-top:10px;font-size:9.5px;color:var(--text-3);padding:0 2px">
-          <span style="color:var(--green)">root@ubuntu-8gb-nbg1-1:~#</span> <span style="display:inline-block;width:7px;height:.85em;background:var(--green);vertical-align:text-bottom;animation:blink 1s step-end infinite;"></span>
-        </div>
+<span style="color:var(--green)">root@vps:~/app#</span> <span style="color:var(--text)">npm test</span>
+
+<span style="color:var(--text-3)">  auth › login</span>
+<span style="color:var(--green)">  ✓ returns 401 on wrong password (12ms)</span>
+<span style="color:var(--green)">  ✓ returns 200 on valid credentials (9ms)</span>
+
+<span style="color:var(--green)">root@vps:~/app#</span> <span style="display:inline-block;width:7px;height:.85em;background:var(--green);vertical-align:text-bottom;animation:blink 1s step-end infinite;"></span></pre>
       </div>
     </div>
   </div>
