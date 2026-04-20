@@ -1,4 +1,4 @@
-# mogsh — Backlog
+# moggsh — Backlog
 
 > Vibe Coding Terminal for Android
 

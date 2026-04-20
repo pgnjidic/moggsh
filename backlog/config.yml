@@ -1,4 +1,4 @@
-project_name: "mogsh"
+project_name: "moggsh"
 default_status: "To Do"
 statuses: ["To Do", "In Progress", "Done"]
 labels: ["s1", "s2", "s3", "s4", "s5", "v1.1", "v1.2", "infra"]

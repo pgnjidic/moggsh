@@ -38,7 +38,7 @@ echo "    Ostavi ovaj terminal otvoren. Ctrl+C za prekid."
 echo ""
 echo "    Na VPS-u pokreni:"
 echo "      adb connect localhost:5555"
-echo "      cd mogsh_app && flutter run"
+echo "      cd moggsh_app && flutter run"
 echo ""
 
 ssh -o ServerAliveInterval=30 \

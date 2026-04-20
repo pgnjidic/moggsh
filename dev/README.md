@@ -46,7 +46,7 @@ Ostavi ovaj terminal otvoren.
 ```bash
 adb connect localhost:5555
 adb devices                    # treba pokazati telefon
-cd mogsh_app
+cd moggsh_app
 flutter run
 ```
 
@@ -65,14 +65,14 @@ Ako tunel nije opcija (nestabilna veza, firewall), buildaj APK na VPS-u i instal
 
 ### Na VPS-u
 ```bash
-cd mogsh_app
+cd moggsh_app
 flutter build apk --debug
 # APK je u: build/app/outputs/flutter-apk/app-debug.apk
 ```
 
 ### Prebaci na laptop
 ```bash
-scp root@<vps-ip>:/root/mogsh/mogsh_app/build/app/outputs/flutter-apk/app-debug.apk .
+scp root@<vps-ip>:/root/mogsh/moggsh_app/build/app/outputs/flutter-apk/app-debug.apk .
 ```
 
 ### Instaliraj na telefon (laptop)
