@@ -106,10 +106,15 @@ class TerminalWidgetState extends State<TerminalWidget> {
     _controller.runJavaScript('termFit()');
   }
 
-  Future<String?> getSelection() async {
+  Future<void> enterCopyMode() async {
+    if (!_ready) return;
+    await _controller.runJavaScript('termEnterCopyMode()');
+  }
+
+  Future<String?> exitCopyMode() async {
     if (!_ready) return null;
     try {
-      final raw = await _controller.runJavaScriptReturningResult('termCopySelection()');
+      final raw = await _controller.runJavaScriptReturningResult('termExitCopyMode()');
       final text = jsonDecode(raw.toString()) as String;
       return text.isEmpty ? null : text;
     } catch (_) {

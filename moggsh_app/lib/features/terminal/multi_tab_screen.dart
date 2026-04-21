@@ -20,6 +20,7 @@ class MultiTabScreen extends StatefulWidget {
 class _MultiTabScreenState extends State<MultiTabScreen> {
   late final PageController _pageController;
   final _terminalKeys = <String, GlobalKey<TerminalWidgetState>>{};
+  bool _copyModeActive = false;
 
   @override
   void initState() {
@@ -36,12 +37,18 @@ class _MultiTabScreenState extends State<MultiTabScreen> {
   GlobalKey<TerminalWidgetState> _keyFor(String tabId) =>
       _terminalKeys.putIfAbsent(tabId, () => GlobalKey<TerminalWidgetState>());
 
-  Future<void> _copySelection(TabManager mgr) async {
+  Future<void> _toggleCopyMode(TabManager mgr) async {
     final key = _terminalKeys[mgr.activeTab?.id];
     if (key == null) return;
-    final text = await key.currentState?.getSelection();
-    if (text != null && text.isNotEmpty) {
-      await Clipboard.setData(ClipboardData(text: text));
+    if (!_copyModeActive) {
+      await key.currentState?.enterCopyMode();
+      setState(() => _copyModeActive = true);
+    } else {
+      final text = await key.currentState?.exitCopyMode();
+      setState(() => _copyModeActive = false);
+      if (text != null && text.isNotEmpty) {
+        await Clipboard.setData(ClipboardData(text: text));
+      }
     }
   }
 
@@ -103,7 +110,8 @@ class _MultiTabScreenState extends State<MultiTabScreen> {
                 ),
                 ShortcutBar(
                   onSend: (data) => mgr.activeTab?.sendInput(data),
-                  onCopy: () => _copySelection(mgr),
+                  onCopy: () => _toggleCopyMode(mgr),
+                  copyModeActive: _copyModeActive,
                 ),
               ],
             ),

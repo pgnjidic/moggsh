@@ -166,7 +166,27 @@
       return b.viewportY + 1 >= b.length - term.rows;
     }
 
+    // Copy mode: touch events → synthesized mouse events so xterm.js can select text
+    let _copyMode = false;
+    function _dispatchMouse(type, touch) {
+      const el = document.querySelector('.xterm-screen') || document.querySelector('.xterm');
+      if (!el) return;
+      el.dispatchEvent(new MouseEvent(type, {
+        clientX: touch.clientX, clientY: touch.clientY,
+        bubbles: true, cancelable: true,
+        button: 0, buttons: (type === 'mouseup') ? 0 : 1,
+      }));
+    }
+
+    window.termEnterCopyMode = () => { _copyMode = true; term.clearSelection(); };
+    window.termExitCopyMode  = () => { _copyMode = false; return term.getSelection() || ''; };
+
     document.addEventListener('touchstart', (e) => {
+      if (_copyMode && e.touches.length === 1) {
+        e.preventDefault();
+        _dispatchMouse('mousedown', e.touches[0]);
+        return;
+      }
       if (e.touches.length === 1) {
         isTouching = true;
         cancelInertia();
@@ -177,9 +197,14 @@
         velocityPxMs = 0;
         _th.push({ y: scrollStartY, t: e.timeStamp });
       }
-    }, { passive: true });
+    }, { passive: false });
 
     document.addEventListener('touchmove', (e) => {
+      if (_copyMode && e.touches.length === 1) {
+        e.preventDefault();
+        _dispatchMouse('mousemove', e.touches[0]);
+        return;
+      }
       if (e.touches.length !== 1 || scrollStartY === null) return;
       const y = e.touches[0].clientY;
       _th.push({ y, t: e.timeStamp });
@@ -188,9 +213,14 @@
       const rowH = term.options.fontSize * (term.options.lineHeight || 1.2);
       currentScrollRow = scrollStartRow + (scrollStartY - y) / rowH;
       term.scrollToLine(Math.round(currentScrollRow));
-    }, { passive: true });
+    }, { passive: false });
 
-    document.addEventListener('touchend', () => {
+    document.addEventListener('touchend', (e) => {
+      if (_copyMode) {
+        e.preventDefault();
+        if (e.changedTouches.length > 0) _dispatchMouse('mouseup', e.changedTouches[0]);
+        return;
+      }
       isTouching = false;
       if (scrollStartY === null) return;
       scrollStartY = null;
@@ -222,7 +252,7 @@
         inertiaRaf = requestAnimationFrame(step);
       }
       inertiaRaf = requestAnimationFrame(step);
-    }, { passive: true });
+    }, { passive: false });
 
     // Compositor-force loop: toggling opacity on a tiny off-screen composited
     // element makes Chromium produce an EGL swap each tick, bypassing rAF
@@ -304,12 +334,6 @@
     // Flutter → JS: search
     window.termSearch = (query) => searchAddon.findNext(query);
 
-    // Flutter → JS: get selected text (or select all if nothing selected)
-    window.termCopySelection = () => {
-      let sel = term.getSelection();
-      if (!sel) { term.selectAll(); sel = term.getSelection(); }
-      return sel || '';
-    };
 
     // JS → Flutter: send user input
     term.onData((data) => {

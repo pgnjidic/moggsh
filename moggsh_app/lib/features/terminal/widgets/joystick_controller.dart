@@ -18,6 +18,7 @@ class JoystickController extends StatelessWidget {
   final Widget voiceBtn;
   final VoidCallback onOpenSnippets;
   final VoidCallback? onCopy;
+  final bool copyModeActive;
   final bool landscape;
 
   const JoystickController({
@@ -26,6 +27,7 @@ class JoystickController extends StatelessWidget {
     required this.voiceBtn,
     required this.onOpenSnippets,
     this.onCopy,
+    this.copyModeActive = false,
     this.landscape = false,
   });
 
@@ -51,7 +53,7 @@ class JoystickController extends StatelessWidget {
         ),
       ),
       const SizedBox(height: 8),
-      _EssentialsStrip(onSend: onSend, onOpenSnippets: onOpenSnippets, onCopy: onCopy),
+      _EssentialsStrip(onSend: onSend, onOpenSnippets: onOpenSnippets, onCopy: onCopy, copyModeActive: copyModeActive),
     ]);
   }
 
@@ -116,7 +118,7 @@ class JoystickController extends StatelessWidget {
         const SizedBox(width: 6),
         _JoystickBtn(
           label: 'Copy',
-          color: AppColors.textMuted,
+          color: copyModeActive ? AppColors.green : AppColors.textMuted,
           haptic: HapticFeedback.mediumImpact,
           onTap: () { if (onCopy != null) onCopy!(); },
           width: 50,
@@ -267,7 +269,8 @@ class _EssentialsStrip extends StatelessWidget {
   final ValueChanged<String> onSend;
   final VoidCallback onOpenSnippets;
   final VoidCallback? onCopy;
-  const _EssentialsStrip({required this.onSend, required this.onOpenSnippets, this.onCopy});
+  final bool copyModeActive;
+  const _EssentialsStrip({required this.onSend, required this.onOpenSnippets, this.onCopy, this.copyModeActive = false});
 
   @override
   Widget build(BuildContext context) {
@@ -287,7 +290,7 @@ class _EssentialsStrip extends StatelessWidget {
         Expanded(
           child: _JoystickBtn(
             label: 'Copy',
-            color: AppColors.textMuted,
+            color: copyModeActive ? AppColors.green : AppColors.textMuted,
             haptic: HapticFeedback.mediumImpact,
             onTap: () { if (onCopy != null) onCopy!(); },
             expand: true,
