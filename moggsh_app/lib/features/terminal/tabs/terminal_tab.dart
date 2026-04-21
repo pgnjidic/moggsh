@@ -12,8 +12,6 @@ class TerminalTab {
   final List<String> scrollbackBuffer = [];
   static const int maxScrollback = 5000;
 
-  final _inputLineBuffer = StringBuffer();
-
   final _outputController = StreamController<String>.broadcast();
   final _closedController = StreamController<void>.broadcast();
 
@@ -61,27 +59,7 @@ class TerminalTab {
     });
   }
 
-  void sendInput(String data) {
-    for (final ch in data.split('')) {
-      if (ch == '\r' || ch == '\n') {
-        final cmd = _inputLineBuffer.toString().trim();
-        if (cmd == 'exit' || cmd == 'logout') session.disableReconnect();
-        _inputLineBuffer.clear();
-      } else if (ch == '\x7f' || ch == '\x08') {
-        final s = _inputLineBuffer.toString();
-        if (s.isNotEmpty) {
-          _inputLineBuffer.clear();
-          _inputLineBuffer.write(s.substring(0, s.length - 1));
-        }
-      } else if (ch.codeUnitAt(0) >= 0x20) {
-        _inputLineBuffer.write(ch);
-      } else {
-        // control character (arrow keys etc.) resets line buffer
-        _inputLineBuffer.clear();
-      }
-    }
-    session.write(data);
-  }
+  void sendInput(String data) => session.write(data);
 
   void resize(int cols, int rows) => session.resize(cols, rows);
 

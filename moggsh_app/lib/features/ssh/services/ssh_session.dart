@@ -97,7 +97,7 @@ class SshSession {
       _shell!.stdout
           .cast<List<int>>()
           .transform(const Utf8Decoder(allowMalformed: true) as StreamTransformer<List<int>, String>)
-          .listen(emit, onDone: _onDisconnected);
+          .listen(emit, onDone: _onCleanExit, onError: (_) => _onDropped(), cancelOnError: true);
       _shell!.stderr
           .cast<List<int>>()
           .transform(const Utf8Decoder(allowMalformed: true) as StreamTransformer<List<int>, String>)
@@ -146,7 +146,14 @@ class SshSession {
     _setState(SshConnectionState.disconnected);
   }
 
-  void _onDisconnected() {
+  // Shell exited cleanly (user typed exit/logout/Ctrl+D) — never reconnect.
+  void _onCleanExit() {
+    _autoReconnect = false;
+    _setState(SshConnectionState.disconnected);
+  }
+
+  // Connection dropped unexpectedly (network error, server crash, etc.) — reconnect.
+  void _onDropped() {
     _setState(SshConnectionState.disconnected);
     if (_autoReconnect && _reconnectAttempts < _maxReconnects) {
       _scheduleReconnect();
