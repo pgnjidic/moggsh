@@ -26,6 +26,7 @@ class TerminalWidget extends StatefulWidget {
 class TerminalWidgetState extends State<TerminalWidget> {
   late final WebViewController _controller;
   bool _ready = false;
+  static const _serviceChannel = MethodChannel('app.moggsh.terminal/service');
 
   // Output batching — flush every 16ms instead of one runJavaScript per chunk
   final StringBuffer _buf = StringBuffer();
@@ -59,6 +60,10 @@ class TerminalWidgetState extends State<TerminalWidget> {
           widget.onInput?.call(data['data'] as String);
         case 'resize':
           widget.onResize?.call(data['cols'] as int, data['rows'] as int);
+        case 'open_url':
+          _serviceChannel
+              .invokeMethod('openUrl', {'url': data['url'] as String})
+              .catchError((_) {});
       }
     } catch (_) {}
   }
@@ -99,6 +104,17 @@ class TerminalWidgetState extends State<TerminalWidget> {
   void fit() {
     if (!_ready) return;
     _controller.runJavaScript('termFit()');
+  }
+
+  Future<String?> getSelection() async {
+    if (!_ready) return null;
+    try {
+      final raw = await _controller.runJavaScriptReturningResult('termCopySelection()');
+      final text = jsonDecode(raw.toString()) as String;
+      return text.isEmpty ? null : text;
+    } catch (_) {
+      return null;
+    }
   }
 
   void search(String query) {

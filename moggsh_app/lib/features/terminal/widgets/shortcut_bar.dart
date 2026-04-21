@@ -13,10 +13,12 @@ import 'joystick_controller.dart';
 /// [JoystickController].
 class ShortcutBar extends StatefulWidget {
   final void Function(String) onSend;
+  final VoidCallback? onCopy;
 
   const ShortcutBar({
     super.key,
     required this.onSend,
+    this.onCopy,
   });
 
   @override
@@ -151,6 +153,7 @@ class _ShortcutBarState extends State<ShortcutBar> {
               onSend: widget.onSend,
               landscape: landscape,
               onOpenSnippets: _showSnippetManager,
+              onCopy: widget.onCopy,
               voiceBtn: _VoiceBtn(
                 listening: listening,
                 error: _voice.state == VoiceState.error,

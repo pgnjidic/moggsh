@@ -100,7 +100,11 @@
     });
 
     const fitAddon = new FitAddon.FitAddon();
-    const webLinksAddon = new WebLinksAddon.WebLinksAddon();
+    const webLinksAddon = new WebLinksAddon.WebLinksAddon((event, uri) => {
+      if (window.FlutterChannel) {
+        window.FlutterChannel.postMessage(JSON.stringify({ type: 'open_url', url: uri }));
+      }
+    });
     const searchAddon = new SearchAddon.SearchAddon();
 
     term.loadAddon(fitAddon);
@@ -299,6 +303,13 @@
 
     // Flutter → JS: search
     window.termSearch = (query) => searchAddon.findNext(query);
+
+    // Flutter → JS: get selected text (or select all if nothing selected)
+    window.termCopySelection = () => {
+      let sel = term.getSelection();
+      if (!sel) { term.selectAll(); sel = term.getSelection(); }
+      return sel || '';
+    };
 
     // JS → Flutter: send user input
     term.onData((data) => {

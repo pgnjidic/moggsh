@@ -36,6 +36,15 @@ class _MultiTabScreenState extends State<MultiTabScreen> {
   GlobalKey<TerminalWidgetState> _keyFor(String tabId) =>
       _terminalKeys.putIfAbsent(tabId, () => GlobalKey<TerminalWidgetState>());
 
+  Future<void> _copySelection(TabManager mgr) async {
+    final key = _terminalKeys[mgr.activeTab?.id];
+    if (key == null) return;
+    final text = await key.currentState?.getSelection();
+    if (text != null && text.isNotEmpty) {
+      await Clipboard.setData(ClipboardData(text: text));
+    }
+  }
+
   void _onSwitch(TabManager mgr, int index) {
     mgr.switchTo(index);
     _pageController.animateToPage(
@@ -94,6 +103,7 @@ class _MultiTabScreenState extends State<MultiTabScreen> {
                 ),
                 ShortcutBar(
                   onSend: (data) => mgr.activeTab?.sendInput(data),
+                  onCopy: () => _copySelection(mgr),
                 ),
               ],
             ),

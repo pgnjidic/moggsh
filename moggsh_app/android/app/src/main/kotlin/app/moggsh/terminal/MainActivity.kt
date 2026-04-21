@@ -42,6 +42,15 @@ class MainActivity : FlutterActivity() {
                         }
                         result.success(null)
                     }
+                    "openUrl" -> {
+                        val url = call.argument<String>("url")
+                        if (url != null) {
+                            val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            startActivity(intent)
+                        }
+                        result.success(null)
+                    }
                     "getNativeLibDir" -> result.success(applicationInfo.nativeLibraryDir)
                     else -> result.notImplemented()
                 }

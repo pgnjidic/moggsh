@@ -17,6 +17,7 @@ class JoystickController extends StatelessWidget {
   final ValueChanged<String> onSend;
   final Widget voiceBtn;
   final VoidCallback onOpenSnippets;
+  final VoidCallback? onCopy;
   final bool landscape;
 
   const JoystickController({
@@ -24,6 +25,7 @@ class JoystickController extends StatelessWidget {
     required this.onSend,
     required this.voiceBtn,
     required this.onOpenSnippets,
+    this.onCopy,
     this.landscape = false,
   });
 
@@ -49,7 +51,7 @@ class JoystickController extends StatelessWidget {
         ),
       ),
       const SizedBox(height: 8),
-      _EssentialsStrip(onSend: onSend, onOpenSnippets: onOpenSnippets),
+      _EssentialsStrip(onSend: onSend, onOpenSnippets: onOpenSnippets, onCopy: onCopy),
     ]);
   }
 
@@ -113,18 +115,18 @@ class JoystickController extends StatelessWidget {
         ),
         const SizedBox(width: 6),
         _JoystickBtn(
-          label: 'Ctrl+D',
+          label: 'Copy',
           color: AppColors.textMuted,
           haptic: HapticFeedback.mediumImpact,
-          onTap: () => onSend('\x04'),
-          width: 58,
+          onTap: () { if (onCopy != null) onCopy!(); },
+          width: 50,
         ),
         _JoystickBtn(
           label: 'Paste',
           color: AppColors.textMuted,
           haptic: HapticFeedback.mediumImpact,
           onTap: () { _pasteClipboard(onSend); },
-          width: 58,
+          width: 50,
         ),
         const SizedBox(width: 6),
         _JoystickBtn(
@@ -264,7 +266,8 @@ class _ActionCluster extends StatelessWidget {
 class _EssentialsStrip extends StatelessWidget {
   final ValueChanged<String> onSend;
   final VoidCallback onOpenSnippets;
-  const _EssentialsStrip({required this.onSend, required this.onOpenSnippets});
+  final VoidCallback? onCopy;
+  const _EssentialsStrip({required this.onSend, required this.onOpenSnippets, this.onCopy});
 
   @override
   Widget build(BuildContext context) {
@@ -283,10 +286,10 @@ class _EssentialsStrip extends StatelessWidget {
         const SizedBox(width: 6),
         Expanded(
           child: _JoystickBtn(
-            label: 'Ctrl+D',
+            label: 'Copy',
             color: AppColors.textMuted,
             haptic: HapticFeedback.mediumImpact,
-            onTap: () => onSend('\x04'),
+            onTap: () { if (onCopy != null) onCopy!(); },
             expand: true,
           ),
         ),
