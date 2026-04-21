@@ -7,6 +7,12 @@ import '../../../core/theme/app_colors.dart';
 /// and an always-on essentials strip (Ctrl+C/D/L + snippet gear).
 ///
 /// In landscape collapses to a single 44 px row.
+Future<void> _pasteClipboard(ValueChanged<String> onSend) async {
+  final data = await Clipboard.getData(Clipboard.kTextPlain);
+  final text = data?.text;
+  if (text != null && text.isNotEmpty) onSend(text);
+}
+
 class JoystickController extends StatelessWidget {
   final ValueChanged<String> onSend;
   final Widget voiceBtn;
@@ -114,10 +120,10 @@ class JoystickController extends StatelessWidget {
           width: 58,
         ),
         _JoystickBtn(
-          label: 'Ctrl+V',
+          label: 'Paste',
           color: AppColors.textMuted,
           haptic: HapticFeedback.mediumImpact,
-          onTap: () => onSend('\x16'),
+          onTap: () { _pasteClipboard(onSend); },
           width: 58,
         ),
         const SizedBox(width: 6),
@@ -287,10 +293,10 @@ class _EssentialsStrip extends StatelessWidget {
         const SizedBox(width: 6),
         Expanded(
           child: _JoystickBtn(
-            label: 'Ctrl+V',
+            label: 'Paste',
             color: AppColors.textMuted,
             haptic: HapticFeedback.mediumImpact,
-            onTap: () => onSend('\x16'),
+            onTap: () { _pasteClipboard(onSend); },
             expand: true,
           ),
         ),
