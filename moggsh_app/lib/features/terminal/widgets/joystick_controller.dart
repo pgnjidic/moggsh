@@ -20,6 +20,7 @@ class JoystickController extends StatelessWidget {
   final VoidCallback? onCopy;
   final bool copyModeActive;
   final bool landscape;
+  final VoidCallback? onShowKeyboard;
 
   const JoystickController({
     super.key,
@@ -29,6 +30,7 @@ class JoystickController extends StatelessWidget {
     this.onCopy,
     this.copyModeActive = false,
     this.landscape = false,
+    this.onShowKeyboard,
   });
 
   @override
@@ -53,7 +55,7 @@ class JoystickController extends StatelessWidget {
         ),
       ),
       const SizedBox(height: 8),
-      _EssentialsStrip(onSend: onSend, onOpenSnippets: onOpenSnippets, onCopy: onCopy, copyModeActive: copyModeActive),
+      _EssentialsStrip(onSend: onSend, onOpenSnippets: onOpenSnippets, onCopy: onCopy, copyModeActive: copyModeActive, onShowKeyboard: onShowKeyboard),
     ]);
   }
 
@@ -155,6 +157,13 @@ class JoystickController extends StatelessWidget {
           width: 38,
         ),
         const Spacer(),
+        if (onShowKeyboard != null)
+          _JoystickBtn(
+            icon: Icons.keyboard_rounded,
+            color: AppColors.teal,
+            haptic: HapticFeedback.selectionClick,
+            onTap: onShowKeyboard!,
+          ),
         _JoystickBtn(
           icon: Icons.tune_rounded,
           color: AppColors.textMuted,
@@ -270,7 +279,8 @@ class _EssentialsStrip extends StatelessWidget {
   final VoidCallback onOpenSnippets;
   final VoidCallback? onCopy;
   final bool copyModeActive;
-  const _EssentialsStrip({required this.onSend, required this.onOpenSnippets, this.onCopy, this.copyModeActive = false});
+  final VoidCallback? onShowKeyboard;
+  const _EssentialsStrip({required this.onSend, required this.onOpenSnippets, this.onCopy, this.copyModeActive = false, this.onShowKeyboard});
 
   @override
   Widget build(BuildContext context) {
@@ -328,6 +338,15 @@ class _EssentialsStrip extends StatelessWidget {
           onTap: () => onSend('3\r'),
         ),
         const SizedBox(width: 6),
+        if (onShowKeyboard != null) ...[
+          _JoystickBtn(
+            icon: Icons.keyboard_rounded,
+            color: AppColors.teal,
+            haptic: HapticFeedback.selectionClick,
+            onTap: onShowKeyboard!,
+          ),
+          const SizedBox(width: 4),
+        ],
         _JoystickBtn(
           icon: Icons.tune_rounded,
           color: AppColors.textMuted,

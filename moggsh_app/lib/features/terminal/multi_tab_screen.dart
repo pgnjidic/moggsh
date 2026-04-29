@@ -37,6 +37,10 @@ class _MultiTabScreenState extends State<MultiTabScreen> {
   GlobalKey<TerminalWidgetState> _keyFor(String tabId) =>
       _terminalKeys.putIfAbsent(tabId, () => GlobalKey<TerminalWidgetState>());
 
+  void _showKeyboard(TabManager mgr) {
+    _terminalKeys[mgr.activeTab?.id]?.currentState?.focusKeyboard();
+  }
+
   Future<void> _toggleCopyMode(TabManager mgr) async {
     final key = _terminalKeys[mgr.activeTab?.id];
     if (key == null) return;
@@ -112,6 +116,7 @@ class _MultiTabScreenState extends State<MultiTabScreen> {
                   onSend: (data) => mgr.activeTab?.sendInput(data),
                   onCopy: () => _toggleCopyMode(mgr),
                   copyModeActive: _copyModeActive,
+                  onShowKeyboard: () => _showKeyboard(mgr),
                 ),
               ],
             ),

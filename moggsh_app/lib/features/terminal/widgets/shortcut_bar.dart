@@ -15,12 +15,14 @@ class ShortcutBar extends StatefulWidget {
   final void Function(String) onSend;
   final VoidCallback? onCopy;
   final bool copyModeActive;
+  final VoidCallback? onShowKeyboard;
 
   const ShortcutBar({
     super.key,
     required this.onSend,
     this.onCopy,
     this.copyModeActive = false,
+    this.onShowKeyboard,
   });
 
   @override
@@ -157,6 +159,7 @@ class _ShortcutBarState extends State<ShortcutBar> {
               onOpenSnippets: _showSnippetManager,
               onCopy: widget.onCopy,
               copyModeActive: widget.copyModeActive,
+              onShowKeyboard: widget.onShowKeyboard,
               voiceBtn: _VoiceBtn(
                 listening: listening,
                 error: _voice.state == VoiceState.error,
