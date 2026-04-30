@@ -2,8 +2,11 @@ package app.moggsh.terminal
 
 import android.content.Intent
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.webkit.WebView
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -40,6 +43,22 @@ class MainActivity : FlutterActivity() {
                             wv.requestFocus()
                             wv.postInvalidate()
                         }
+                        result.success(null)
+                    }
+                    "showKeyboard" -> {
+                        // Focus the WebView at Android level, then show the IME.
+                        // The JS side calls term.focus() separately to set up the
+                        // xterm.js textarea InputConnection; we delay showSoftInput
+                        // by 100ms to let Chromium register that InputConnection.
+                        findWebViews(window.decorView).firstOrNull()?.let { wv ->
+                            wv.requestFocus()
+                        }
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            findWebViews(window.decorView).firstOrNull()?.let { wv ->
+                                val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+                                imm.showSoftInput(wv, InputMethodManager.SHOW_IMPLICIT)
+                            }
+                        }, 100)
                         result.success(null)
                     }
                     "openUrl" -> {
