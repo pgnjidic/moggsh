@@ -109,7 +109,7 @@ class TerminalWidgetState extends State<TerminalWidget> {
 
   void focusKeyboard() {
     if (!_ready) return;
-    _controller.runJavaScript('termFit()');
+    _controller.runJavaScript('termFocusKeyboard()');
   }
 
   Future<void> enterCopyMode() async {

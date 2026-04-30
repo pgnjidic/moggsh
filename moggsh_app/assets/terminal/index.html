@@ -180,6 +180,7 @@
 
     window.termEnterCopyMode = () => { _copyMode = true; term.clearSelection(); };
     window.termExitCopyMode  = () => { _copyMode = false; return term.getSelection() || ''; };
+    window.termFocusKeyboard = () => { term.focus(); };
 
     document.addEventListener('touchstart', (e) => {
       if (_copyMode && e.touches.length === 1) {
