@@ -17,28 +17,48 @@ class MultiTabScreen extends StatefulWidget {
   State<MultiTabScreen> createState() => _MultiTabScreenState();
 }
 
-class _MultiTabScreenState extends State<MultiTabScreen> {
+class _MultiTabScreenState extends State<MultiTabScreen> with WidgetsBindingObserver {
   late final PageController _pageController;
   final _terminalKeys = <String, GlobalKey<TerminalWidgetState>>{};
   bool _copyModeActive = false;
+  bool _keyboardVisible = false;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pageController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    final inset = WidgetsBinding.instance.platformDispatcher.views.first.viewInsets.bottom;
+    final nowVisible = inset > 0;
+    if (nowVisible != _keyboardVisible) {
+      setState(() => _keyboardVisible = nowVisible);
+    }
   }
 
   GlobalKey<TerminalWidgetState> _keyFor(String tabId) =>
       _terminalKeys.putIfAbsent(tabId, () => GlobalKey<TerminalWidgetState>());
 
-  void _showKeyboard(TabManager mgr) {
-    _terminalKeys[mgr.activeTab?.id]?.currentState?.focusKeyboard();
+  void _toggleKeyboard(TabManager mgr) {
+    final state = _terminalKeys[mgr.activeTab?.id]?.currentState;
+    if (state == null) return;
+    if (_keyboardVisible) {
+      state.hideKeyboard();
+      setState(() => _keyboardVisible = false);
+    } else {
+      state.showKeyboard();
+      setState(() => _keyboardVisible = true);
+    }
   }
 
   Future<void> _toggleCopyMode(TabManager mgr) async {
@@ -116,7 +136,8 @@ class _MultiTabScreenState extends State<MultiTabScreen> {
                   onSend: (data) => mgr.activeTab?.sendInput(data),
                   onCopy: () => _toggleCopyMode(mgr),
                   copyModeActive: _copyModeActive,
-                  onShowKeyboard: () => _showKeyboard(mgr),
+                  onShowKeyboard: () => _toggleKeyboard(mgr),
+                  keyboardActive: _keyboardVisible,
                 ),
               ],
             ),

@@ -21,6 +21,7 @@ class JoystickController extends StatelessWidget {
   final bool copyModeActive;
   final bool landscape;
   final VoidCallback? onShowKeyboard;
+  final bool keyboardActive;
 
   const JoystickController({
     super.key,
@@ -31,6 +32,7 @@ class JoystickController extends StatelessWidget {
     this.copyModeActive = false,
     this.landscape = false,
     this.onShowKeyboard,
+    this.keyboardActive = false,
   });
 
   @override
@@ -55,7 +57,7 @@ class JoystickController extends StatelessWidget {
         ),
       ),
       const SizedBox(height: 8),
-      _EssentialsStrip(onSend: onSend, onOpenSnippets: onOpenSnippets, onCopy: onCopy, copyModeActive: copyModeActive, onShowKeyboard: onShowKeyboard),
+      _EssentialsStrip(onSend: onSend, onOpenSnippets: onOpenSnippets, onCopy: onCopy, copyModeActive: copyModeActive, onShowKeyboard: onShowKeyboard, keyboardActive: keyboardActive),
     ]);
   }
 
@@ -160,7 +162,7 @@ class JoystickController extends StatelessWidget {
         if (onShowKeyboard != null)
           _JoystickBtn(
             icon: Icons.keyboard_rounded,
-            color: AppColors.teal,
+            color: keyboardActive ? AppColors.green : AppColors.teal,
             haptic: HapticFeedback.selectionClick,
             onTap: onShowKeyboard!,
           ),
@@ -280,7 +282,8 @@ class _EssentialsStrip extends StatelessWidget {
   final VoidCallback? onCopy;
   final bool copyModeActive;
   final VoidCallback? onShowKeyboard;
-  const _EssentialsStrip({required this.onSend, required this.onOpenSnippets, this.onCopy, this.copyModeActive = false, this.onShowKeyboard});
+  final bool keyboardActive;
+  const _EssentialsStrip({required this.onSend, required this.onOpenSnippets, this.onCopy, this.copyModeActive = false, this.onShowKeyboard, this.keyboardActive = false});
 
   @override
   Widget build(BuildContext context) {
@@ -341,7 +344,7 @@ class _EssentialsStrip extends StatelessWidget {
         if (onShowKeyboard != null) ...[
           _JoystickBtn(
             icon: Icons.keyboard_rounded,
-            color: AppColors.teal,
+            color: keyboardActive ? AppColors.green : AppColors.teal,
             haptic: HapticFeedback.selectionClick,
             onTap: onShowKeyboard!,
           ),

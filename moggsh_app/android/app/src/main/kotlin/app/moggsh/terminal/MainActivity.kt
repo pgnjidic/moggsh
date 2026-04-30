@@ -61,6 +61,11 @@ class MainActivity : FlutterActivity() {
                         }, 100)
                         result.success(null)
                     }
+                    "hideKeyboard" -> {
+                        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+                        imm.hideSoftInputFromWindow(window.decorView.windowToken, 0)
+                        result.success(null)
+                    }
                     "openUrl" -> {
                         val url = call.argument<String>("url")
                         if (url != null) {

@@ -107,10 +107,14 @@ class TerminalWidgetState extends State<TerminalWidget> {
     _controller.runJavaScript('termFit()');
   }
 
-  void focusKeyboard() {
+  void showKeyboard() {
     if (!_ready) return;
     _controller.runJavaScript('termFocusKeyboard()');
     _serviceChannel.invokeMethod('showKeyboard').catchError((_) {});
+  }
+
+  void hideKeyboard() {
+    _serviceChannel.invokeMethod('hideKeyboard').catchError((_) {});
   }
 
   Future<void> enterCopyMode() async {
