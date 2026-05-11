@@ -1,5 +1,7 @@
 # moggsh
 
+<img src="moggsh_web/logo.png" alt="moggsh logo" width="80">
+
 **SSH terminal for Android, built for vibe coding.**
 
 Connect to your VPS, run commands while Claude thinks, navigate with a joystick, dictate with your mic. Everything you need for the AI coding loop from your phone. Free forever.
