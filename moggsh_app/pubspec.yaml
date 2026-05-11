@@ -2,7 +2,7 @@ name: moggsh
 description: "moggsh — SSH terminal client for Android, optimized for vibe coding."
 publish_to: 'none'
 
-version: 0.1.0+1
+version: 1.0.0+1
 
 environment:
   sdk: ^3.11.4

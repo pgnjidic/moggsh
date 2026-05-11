@@ -1,8 +1,16 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+val keystoreProps = Properties()
+val keystorePropsFile = rootProject.file("key.properties")
+if (keystorePropsFile.exists()) {
+    keystoreProps.load(FileInputStream(keystorePropsFile))
 }
 
 android {
@@ -20,10 +28,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "app.moggsh.terminal"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -45,9 +50,26 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            keyAlias     = keystoreProps["keyAlias"]     as String? ?: ""
+            keyPassword  = keystoreProps["keyPassword"]  as String? ?: ""
+            storeFile    = keystoreProps["storeFile"]?.let { rootProject.file(it as String) }
+            storePassword = keystoreProps["storePassword"] as String? ?: ""
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName(
+                if (keystorePropsFile.exists()) "release" else "debug"
+            )
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }
