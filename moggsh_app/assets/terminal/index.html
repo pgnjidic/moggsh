@@ -347,6 +347,17 @@
     // Flutter → JS: clear terminal
     window.termClear = () => term.clear();
 
+    // Flutter → JS: return visible terminal content as plain text for copy sheet
+    window.termCopyVisible = () => {
+      const buf = term.buffer.active;
+      const lines = [];
+      for (let i = buf.viewportY; i < buf.viewportY + term.rows; i++) {
+        const line = buf.getLine(i);
+        if (line) lines.push(line.translateToString(true));
+      }
+      return lines.join('\n');
+    };
+
     // Flutter → JS: set font size
     window.termSetFontSize = (size) => {
       term.options.fontSize = Math.min(18, Math.max(11, size));

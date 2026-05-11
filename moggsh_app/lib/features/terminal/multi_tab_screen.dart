@@ -107,27 +107,20 @@ class _MultiTabScreenState extends State<MultiTabScreen> with WidgetsBindingObse
   Future<void> _toggleCopyMode(TabManager mgr) async {
     final key = _terminalKeys[mgr.activeTab?.id];
     if (key == null) return;
-    if (!_copyModeActive) {
-      await key.currentState?.enterCopyMode();
-      setState(() => _copyModeActive = true);
-    } else {
-      final text = await key.currentState?.exitCopyMode();
-      setState(() => _copyModeActive = false);
-      if (text != null && text.isNotEmpty) {
-        await Clipboard.setData(ClipboardData(text: text));
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            duration: Duration(seconds: 1),
-            backgroundColor: Color(0xFF1A1A2E),
-            content: Text('Copied',
-                style: TextStyle(
-                    color: Color(0xFF00FF88),
-                    fontFamily: 'monospace',
-                    fontSize: 12)),
-          ));
-        }
-      }
-    }
+
+    setState(() => _copyModeActive = true);
+    final text = await key.currentState?.copyVisible();
+    if (!mounted) return;
+    setState(() => _copyModeActive = false);
+
+    if (text == null || text.isEmpty) return;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _CopySheet(text: text),
+    );
   }
 
   void _onSwitch(TabManager mgr, int index) {
@@ -370,6 +363,78 @@ class _TabPageState extends State<_TabPage> with AutomaticKeepAliveClientMixin {
       },
       onInput: widget.tab.sendInput,
       onResize: widget.tab.resize,
+    );
+  }
+}
+
+class _CopySheet extends StatelessWidget {
+  final String text;
+  const _CopySheet({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.6,
+      minChildSize: 0.3,
+      maxChildSize: 0.92,
+      expand: false,
+      builder: (ctx, scrollCtrl) => Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFF0D0D16),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
+          border: Border(top: BorderSide(color: Color(0xFF00FF88), width: 0.5)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFF333355),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 10, 4, 6),
+              child: Row(
+                children: [
+                  const Text('long-press to select text',
+                      style: TextStyle(
+                          color: Color(0xFF444466),
+                          fontFamily: 'monospace',
+                          fontSize: 11)),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('done',
+                        style: TextStyle(
+                            color: Color(0xFF00FF88),
+                            fontFamily: 'monospace',
+                            fontSize: 11)),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(color: Color(0xFF1A1A2E), height: 1),
+            Expanded(
+              child: SingleChildScrollView(
+                controller: scrollCtrl,
+                padding: const EdgeInsets.all(12),
+                child: SelectableText(
+                  text,
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 12,
+                    color: Color(0xFFE0E0E0),
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

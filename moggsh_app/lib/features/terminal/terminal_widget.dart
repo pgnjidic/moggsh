@@ -137,8 +137,13 @@ class TerminalWidgetState extends State<TerminalWidget> {
     if (!_ready) return null;
     try {
       final raw = await _controller.runJavaScriptReturningResult('termCopyVisible()');
-      final text = jsonDecode(raw.toString()) as String;
-      return text.isEmpty ? null : text;
+      final rawStr = raw.toString();
+      // Android WebView may or may not JSON-encode string return values
+      try {
+        final decoded = jsonDecode(rawStr);
+        if (decoded is String) return decoded.isEmpty ? null : decoded;
+      } catch (_) {}
+      return rawStr.isEmpty ? null : rawStr;
     } catch (_) {
       return null;
     }
