@@ -6,8 +6,6 @@ Connect to your VPS, run commands while Claude thinks, navigate with a joystick,
 
 [moggsh.com](https://moggsh.com) · [Download APK](https://moggsh.com/moggsh.apk)
 
-![moggsh screenshot](moggsh_web/screenshot.png)
-
 ---
 
 ## Why
