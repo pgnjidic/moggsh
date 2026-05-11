@@ -186,7 +186,12 @@
       let sr = _selStart.row, sc = _selStart.col, er = cur.row, ec = cur.col;
       if (er < sr || (er === sr && ec < sc)) { [sr, sc, er, ec] = [er, ec, sr, sc]; }
       const len = (er - sr) * term.cols + (ec - sc + 1);
-      if (len > 0) term.select(sc, sr, len);
+      if (len > 0) {
+        term.select(sc, sr, len);
+        _flushRAF();
+        if (term.rows > 0) term.refresh(0, term.rows - 1);
+        _flushRAF();
+      }
     }
 
     window.termEnterCopyMode = () => { _copyMode = true; _selStart = null; term.clearSelection(); };
@@ -365,12 +370,12 @@
       }
     });
 
-    // Tap to focus / show keyboard on Android
+    // Tap to focus / show keyboard on Android (skip in copy mode — would clear selection)
     document.getElementById('terminal').addEventListener('click', () => {
-      term.focus();
+      if (!_copyMode) term.focus();
     });
     document.getElementById('terminal').addEventListener('touchend', () => {
-      setTimeout(() => term.focus(), 50);
+      if (!_copyMode) setTimeout(() => term.focus(), 50);
     });
 
     // Ready signal — send once, retry until FlutterChannel is available
