@@ -133,6 +133,17 @@ class TerminalWidgetState extends State<TerminalWidget> {
     }
   }
 
+  Future<String?> copyVisible() async {
+    if (!_ready) return null;
+    try {
+      final raw = await _controller.runJavaScriptReturningResult('termCopyVisible()');
+      final text = jsonDecode(raw.toString()) as String;
+      return text.isEmpty ? null : text;
+    } catch (_) {
+      return null;
+    }
+  }
+
   void search(String query) {
     if (!_ready) return;
     _controller.runJavaScript('termSearch(${jsonEncode(query)})');

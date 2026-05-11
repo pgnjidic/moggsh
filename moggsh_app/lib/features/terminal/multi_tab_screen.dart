@@ -23,17 +23,30 @@ class _MultiTabScreenState extends State<MultiTabScreen> with WidgetsBindingObse
   bool _copyModeActive = false;
   bool _keyboardVisible = false;
 
+  // Flutter-level keyboard input relay — bypasses WebView/xterm IME issues on Android.
+  final _kbController = TextEditingController();
+  final _kbFocus = FocusNode();
+  // Three zero-width spaces as invisible sentinel so backspace is always detectable.
+  static const _kbSentinel = '​​​';
+  bool _kbResetting = false;
+
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
     WidgetsBinding.instance.addObserver(this);
+    _kbController.value = TextEditingValue(
+      text: _kbSentinel,
+      selection: TextSelection.collapsed(offset: _kbSentinel.length),
+    );
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _pageController.dispose();
+    _kbController.dispose();
+    _kbFocus.dispose();
     super.dispose();
   }
 
@@ -49,16 +62,46 @@ class _MultiTabScreenState extends State<MultiTabScreen> with WidgetsBindingObse
   GlobalKey<TerminalWidgetState> _keyFor(String tabId) =>
       _terminalKeys.putIfAbsent(tabId, () => GlobalKey<TerminalWidgetState>());
 
-  void _toggleKeyboard(TabManager mgr) {
-    final state = _terminalKeys[mgr.activeTab?.id]?.currentState;
-    if (state == null) return;
+  void _toggleKeyboard() {
     if (_keyboardVisible) {
-      state.hideKeyboard();
-      setState(() => _keyboardVisible = false);
+      _kbFocus.unfocus();
     } else {
-      state.showKeyboard();
-      setState(() => _keyboardVisible = true);
+      if (!_kbResetting) {
+        _kbController.value = TextEditingValue(
+          text: _kbSentinel,
+          selection: TextSelection.collapsed(offset: _kbSentinel.length),
+        );
+      }
+      _kbFocus.requestFocus();
     }
+  }
+
+  void _onKbChanged(String value) {
+    if (_kbResetting) return;
+    _kbResetting = true;
+
+    final mgr = Provider.of<TabManager>(context, listen: false);
+
+    if (value.length > _kbSentinel.length) {
+      final typed = value.substring(_kbSentinel.length);
+      for (int i = 0; i < typed.length; i++) {
+        final c = typed[i];
+        mgr.activeTab?.sendInput(c == '\n' ? '\r' : c);
+      }
+    } else if (value.length < _kbSentinel.length) {
+      final count = _kbSentinel.length - value.length;
+      for (int i = 0; i < count; i++) {
+        mgr.activeTab?.sendInput('\x7f');
+      }
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _kbController.value = TextEditingValue(
+        text: _kbSentinel,
+        selection: TextSelection.collapsed(offset: _kbSentinel.length),
+      );
+      _kbResetting = false;
+    });
   }
 
   Future<void> _toggleCopyMode(TabManager mgr) async {
@@ -72,6 +115,17 @@ class _MultiTabScreenState extends State<MultiTabScreen> with WidgetsBindingObse
       setState(() => _copyModeActive = false);
       if (text != null && text.isNotEmpty) {
         await Clipboard.setData(ClipboardData(text: text));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            duration: Duration(seconds: 1),
+            backgroundColor: Color(0xFF1A1A2E),
+            content: Text('Copied',
+                style: TextStyle(
+                    color: Color(0xFF00FF88),
+                    fontFamily: 'monospace',
+                    fontSize: 12)),
+          ));
+        }
       }
     }
   }
@@ -136,8 +190,27 @@ class _MultiTabScreenState extends State<MultiTabScreen> with WidgetsBindingObse
                   onSend: (data) => mgr.activeTab?.sendInput(data),
                   onCopy: () => _toggleCopyMode(mgr),
                   copyModeActive: _copyModeActive,
-                  onShowKeyboard: () => _toggleKeyboard(mgr),
+                  onShowKeyboard: () => _toggleKeyboard(),
                   keyboardActive: _keyboardVisible,
+                ),
+                // Invisible Flutter TextField that captures Android soft keyboard
+                // input and relays it to the SSH session. This is needed because
+                // xterm.js in a WebView does not reliably receive Android IME events.
+                SizedBox(
+                  height: 1,
+                  child: Opacity(
+                    opacity: 0,
+                    child: TextField(
+                      controller: _kbController,
+                      focusNode: _kbFocus,
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      keyboardType: TextInputType.multiline,
+                      maxLines: null,
+                      decoration: const InputDecoration.collapsed(hintText: ''),
+                      onChanged: _onKbChanged,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -264,10 +337,10 @@ class _TabPageState extends State<_TabPage> with AutomaticKeepAliveClientMixin {
             // Ask Android to mark the WebView surface dirty — this forces the
             // compositor to pick up pending Chromium canvas draws immediately,
             // without requiring a real user touch event.
-            const _ch = MethodChannel('app.moggsh.terminal/service');
+            const ch = MethodChannel('app.moggsh.terminal/service');
             for (final ms in [50, 200, 500]) {
               Future.delayed(Duration(milliseconds: ms), () {
-                _ch.invokeMethod('invalidateWebView').catchError((_) {});
+                ch.invokeMethod('invalidateWebView').catchError((_) {});
                 if (mounted) widget.terminalKey.currentState?.fit();
               });
             }

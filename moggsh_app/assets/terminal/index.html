@@ -166,26 +166,38 @@
       return b.viewportY + 1 >= b.length - term.rows;
     }
 
-    // Copy mode: touch events → synthesized mouse events so xterm.js can select text
+    // Copy mode: touch drag → term.select() so selection works without trusted events
     let _copyMode = false;
-    function _dispatchMouse(type, touch) {
-      const el = document.querySelector('.xterm-screen') || document.querySelector('.xterm');
-      if (!el) return;
-      el.dispatchEvent(new MouseEvent(type, {
-        clientX: touch.clientX, clientY: touch.clientY,
-        bubbles: true, cancelable: true,
-        button: 0, buttons: (type === 'mouseup') ? 0 : 1,
-      }));
+    let _selStart = null; // { col, row } in buffer coordinates
+
+    function _pixelToCell(clientX, clientY) {
+      const el = document.getElementById('terminal');
+      const rect = el.getBoundingClientRect();
+      const cellW = rect.width / term.cols;
+      const cellH = rect.height / term.rows;
+      const col = Math.max(0, Math.min(term.cols - 1, Math.floor((clientX - rect.left) / cellW)));
+      const row = Math.max(0, Math.floor((clientY - rect.top) / cellH) + term.buffer.active.viewportY);
+      return { col, row };
     }
 
-    window.termEnterCopyMode = () => { _copyMode = true; term.clearSelection(); };
-    window.termExitCopyMode  = () => { _copyMode = false; return term.getSelection() || ''; };
+    function _updateCopySelection(touch) {
+      if (!_selStart) return;
+      const cur = _pixelToCell(touch.clientX, touch.clientY);
+      let sr = _selStart.row, sc = _selStart.col, er = cur.row, ec = cur.col;
+      if (er < sr || (er === sr && ec < sc)) { [sr, sc, er, ec] = [er, ec, sr, sc]; }
+      const len = (er - sr) * term.cols + (ec - sc + 1);
+      if (len > 0) term.select(sc, sr, len);
+    }
+
+    window.termEnterCopyMode = () => { _copyMode = true; _selStart = null; term.clearSelection(); };
+    window.termExitCopyMode  = () => { _copyMode = false; _selStart = null; return term.getSelection() || ''; };
     window.termFocusKeyboard = () => { term.focus(); };
 
     document.addEventListener('touchstart', (e) => {
       if (_copyMode && e.touches.length === 1) {
         e.preventDefault();
-        _dispatchMouse('mousedown', e.touches[0]);
+        _selStart = _pixelToCell(e.touches[0].clientX, e.touches[0].clientY);
+        term.clearSelection();
         return;
       }
       if (e.touches.length === 1) {
@@ -203,7 +215,7 @@
     document.addEventListener('touchmove', (e) => {
       if (_copyMode && e.touches.length === 1) {
         e.preventDefault();
-        _dispatchMouse('mousemove', e.touches[0]);
+        _updateCopySelection(e.touches[0]);
         return;
       }
       if (e.touches.length !== 1 || scrollStartY === null) return;
@@ -219,7 +231,8 @@
     document.addEventListener('touchend', (e) => {
       if (_copyMode) {
         e.preventDefault();
-        if (e.changedTouches.length > 0) _dispatchMouse('mouseup', e.changedTouches[0]);
+        if (e.changedTouches.length > 0) _updateCopySelection(e.changedTouches[0]);
+        _selStart = null;
         return;
       }
       isTouching = false;
