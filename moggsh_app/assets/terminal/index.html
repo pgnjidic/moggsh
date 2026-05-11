@@ -91,6 +91,7 @@
         brightMagenta:'#FF44FF',
         brightCyan:   '#44FFFF',
         brightWhite:  '#FFFFFF',
+        selectionBackground: 'rgba(0, 212, 255, 0.35)',
       },
       cursorBlink: true,
       allowTransparency: false,
@@ -194,8 +195,18 @@
       }
     }
 
-    window.termEnterCopyMode = () => { _copyMode = true; _selStart = null; term.clearSelection(); };
-    window.termExitCopyMode  = () => { _copyMode = false; _selStart = null; return term.getSelection() || ''; };
+    window.termEnterCopyMode = () => {
+      _copyMode = true; _selStart = null; term.clearSelection();
+      term.options.cursorStyle = 'underline';
+    };
+    window.termExitCopyMode = () => {
+      _copyMode = false; _selStart = null;
+      term.options.cursorStyle = 'block';
+      const sel = term.getSelection() || '';
+      _flushRAF();
+      if (term.rows > 0) term.refresh(0, term.rows - 1);
+      return sel;
+    };
     window.termFocusKeyboard = () => { term.focus(); };
 
     document.addEventListener('touchstart', (e) => {
